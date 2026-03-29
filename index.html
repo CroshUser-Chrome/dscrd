@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P Discord · Calls + Media Embed</title>
+    <title>P2P Discord · Full Profile System + Calls</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
@@ -122,35 +122,9 @@
             align-items: center;
             gap: 6px;
         }
-        .call-btn.active { background: #da373c; }
-        .call-btn.ringing { background: #faa81a; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
-        .video-container {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            width: 320px;
-            background: #1e1f22;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            z-index: 100;
-            display: none;
-        }
-        .video-container.active { display: block; }
-        .video-container video {
-            width: 100%;
-            background: #000;
-        }
-        .video-controls {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            padding: 8px;
-            background: #2b2d31;
-        }
         .messages-container { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
-        .message { display: flex; gap: 16px; align-items: flex-start; }
+        .message { display: flex; gap: 16px; align-items: flex-start; cursor: pointer; }
+        .message:hover { background: rgba(255,255,255,0.02); border-radius: 8px; }
         .message-avatar {
             width: 40px; height: 40px; border-radius: 50%;
             background: #5865f2;
@@ -161,9 +135,13 @@
             background-size: cover;
             background-position: center;
             flex-shrink: 0;
+            cursor: pointer;
+            transition: transform 0.1s;
         }
+        .message-avatar:hover { transform: scale(1.05); }
         .message-header { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-        .message-username { font-weight: 600; color: #f2f3f5; }
+        .message-username { font-weight: 600; color: #f2f3f5; cursor: pointer; }
+        .message-username:hover { text-decoration: underline; }
         .message-timestamp { font-size: 10px; color: #6d6f78; }
         .message-text { margin-top: 4px; color: #dbdee1; word-break: break-word; }
         .file-attachment {
@@ -183,13 +161,8 @@
             border-radius: 8px;
             overflow: hidden;
         }
-        .media-preview img, .media-preview video {
-            max-width: 100%;
-            border-radius: 8px;
-        }
-        .media-preview audio {
-            width: 300px;
-        }
+        .media-preview img, .media-preview video { max-width: 100%; border-radius: 8px; }
+        .media-preview audio { width: 300px; }
         .input-area { padding: 16px; background: #2b2d31; border-top: 1px solid #1e1f22; }
         .message-input-wrapper {
             background: #383a40;
@@ -222,8 +195,9 @@
             flex-direction: column;
         }
         .member-header { padding: 16px; font-weight: 600; box-shadow: 0 1px 0 #1e1f22; }
-        .member-item { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; }
-        .member-avatar-small { width: 32px; height: 32px; border-radius: 50%; background: #5865f2; background-size: cover; }
+        .member-item { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; cursor: pointer; }
+        .member-item:hover { background: #3c3f45; }
+        .member-avatar-small { width: 32px; height: 32px; border-radius: 50%; background: #5865f2; background-size: cover; cursor: pointer; }
         .user-panel {
             background: #232428;
             padding: 12px 8px;
@@ -235,23 +209,47 @@
         }
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #5865f2; background-size: cover; }
         .user-info { flex: 1; font-size: 14px; font-weight: 500; }
-        .profile-modal {
+        .user-status { font-size: 11px; color: #a3a6aa; }
+        
+        /* Profile Modal */
+        .profile-modal, .user-profile-modal {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             align-items: center;
             justify-content: center;
             z-index: 1000;
         }
         .modal-card {
             background: #2b2d31;
-            width: 360px;
+            width: 420px;
+            max-width: 90%;
             border-radius: 16px;
-            padding: 20px;
+            overflow: hidden;
         }
-        .modal-card input {
+        .profile-banner {
+            height: 100px;
+            background: linear-gradient(135deg, #5865f2, #4752c4);
+        }
+        .profile-avatar-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #5865f2;
+            background-size: cover;
+            background-position: center;
+            margin-top: -40px;
+            margin-left: 20px;
+            border: 4px solid #2b2d31;
+        }
+        .profile-info { padding: 16px 20px; }
+        .profile-username { font-size: 20px; font-weight: 600; color: white; }
+        .profile-status { font-size: 12px; color: #a3a6aa; margin-top: 4px; }
+        .profile-bio { margin-top: 12px; padding-top: 12px; border-top: 1px solid #3c3f45; color: #dbdee1; }
+        .profile-edit-btn { margin-top: 16px; width: 100%; }
+        .modal-card input, .modal-card textarea {
             width: 100%;
             background: #1e1f22;
             border: none;
@@ -259,10 +257,36 @@
             border-radius: 8px;
             color: white;
             margin-bottom: 12px;
+            font-family: inherit;
         }
+        .modal-card textarea { resize: vertical; min-height: 80px; }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px; }
         button { background: #5865f2; border: none; padding: 8px 16px; border-radius: 8px; color: white; cursor: pointer; }
         .cancel-btn { background: #3c3f45; }
+        .status-select {
+            background: #1e1f22;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 12px;
+            width: 100%;
+        }
+        .video-container {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 320px;
+            background: #1e1f22;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 100;
+            display: none;
+        }
+        .video-container.active { display: block; }
+        .video-container video { width: 100%; background: #000; }
+        .video-controls { display: flex; justify-content: center; gap: 12px; padding: 8px; background: #2b2d31; }
         @media (max-width: 800px) {
             .members-area { display: none; }
             .channels-bar { width: 60px; }
@@ -320,7 +344,7 @@
     <div class="members-area">
         <div class="member-header">Connected Peer</div>
         <div class="member-list">
-            <div class="member-item">
+            <div class="member-item" id="remoteMemberItem">
                 <div class="member-avatar-small" id="remoteAvatarSmall"><i class="fas fa-user"></i></div>
                 <div><strong id="remoteName">Not connected</strong></div>
             </div>
@@ -331,10 +355,12 @@
     <div class="user-avatar" id="currentUserAvatar"></div>
     <div class="user-info">
         <div id="currentUsername">Loading...</div>
-        <div class="user-status">Click to customize</div>
+        <div class="user-status" id="currentUserStatus">🟢 Online</div>
     </div>
     <i class="fas fa-cog"></i>
 </div>
+
+<!-- Video Call Container -->
 <div id="videoContainer" class="video-container">
     <video id="remoteVideo" autoplay playsinline></video>
     <div class="video-controls">
@@ -342,20 +368,54 @@
         <button id="muteVideoBtn" class="small-btn"><i class="fas fa-video"></i> Video</button>
     </div>
 </div>
-<div id="profileModal" class="profile-modal">
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="profile-modal">
     <div class="modal-card">
-        <h3>Customize Profile</h3>
-        <input type="text" id="profileUsername" placeholder="Username">
-        <input type="file" id="profileAvatarFile" accept="image/*">
-        <div class="modal-buttons">
-            <button id="saveProfileBtn">Save</button>
-            <button id="closeModalBtn" class="cancel-btn">Cancel</button>
+        <div class="profile-banner"></div>
+        <div style="padding: 0 20px;">
+            <div class="profile-avatar-large" id="editAvatarPreview"></div>
+        </div>
+        <div class="profile-info">
+            <h3>Edit Profile</h3>
+            <label>Username</label>
+            <input type="text" id="editUsername" placeholder="Username">
+            <label>Profile Picture</label>
+            <input type="file" id="editAvatarFile" accept="image/*">
+            <label>Status</label>
+            <select id="editStatus" class="status-select">
+                <option value="🟢 Online">🟢 Online</option>
+                <option value="🟡 Idle">🟡 Idle</option>
+                <option value="🔴 Do Not Disturb">🔴 Do Not Disturb</option>
+                <option value="⚫ Offline">⚫ Offline</option>
+            </select>
+            <label>About Me / Bio</label>
+            <textarea id="editBio" placeholder="Write something about yourself..."></textarea>
+            <div class="modal-buttons">
+                <button id="saveEditProfileBtn">Save Changes</button>
+                <button id="closeEditModalBtn" class="cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View User Profile Modal -->
+<div id="viewProfileModal" class="profile-modal">
+    <div class="modal-card">
+        <div class="profile-banner" id="viewBanner"></div>
+        <div style="padding: 0 20px;">
+            <div class="profile-avatar-large" id="viewAvatar"></div>
+        </div>
+        <div class="profile-info">
+            <div class="profile-username" id="viewUsername">Username</div>
+            <div class="profile-status" id="viewStatus">Status</div>
+            <div class="profile-bio" id="viewBio">No bio yet.</div>
         </div>
     </div>
 </div>
 
 <script>
-    // ---------- P2P Chat + Calls + Media Embed ----------
+    // ---------- Full Profile System ----------
     let peer = null;
     let currentConnection = null;
     let connected = false;
@@ -366,14 +426,23 @@
     
     // Call variables
     let localStream = null;
-    let remoteStream = null;
     let call = null;
     let isCallActive = false;
-    let incomingCall = null;
     
-    // Profile
-    let myProfile = { username: "User" + Math.floor(Math.random() * 1000), avatarURL: "" };
-    let remoteProfile = { username: "Unknown", avatarURL: "" };
+    // Profile with bio and status
+    let myProfile = {
+        username: "User" + Math.floor(Math.random() * 1000),
+        avatarURL: "",
+        status: "🟢 Online",
+        bio: ""
+    };
+    let remoteProfile = {
+        username: "Unknown",
+        avatarURL: "",
+        status: "⚫ Offline",
+        bio: "",
+        peerId: null
+    };
     
     let messages = [];
     
@@ -386,7 +455,9 @@
     const connStatusSpan = document.getElementById("connStatus");
     const remoteNameSpan = document.getElementById("remoteName");
     const remoteAvatarSmall = document.getElementById("remoteAvatarSmall");
+    const remoteMemberItem = document.getElementById("remoteMemberItem");
     const currentUsernameSpan = document.getElementById("currentUsername");
+    const currentUserStatusSpan = document.getElementById("currentUserStatus");
     const currentUserAvatarDiv = document.getElementById("currentUserAvatar");
     const roomIdDisplay = document.getElementById("roomIdDisplay");
     const joinRoomId = document.getElementById("joinRoomId");
@@ -401,7 +472,16 @@
     const muteAudioBtn = document.getElementById("muteAudioBtn");
     const muteVideoBtn = document.getElementById("muteVideoBtn");
     
-    // Generate random 6-character room code
+    // Profile modals
+    const editProfileModal = document.getElementById("editProfileModal");
+    const viewProfileModal = document.getElementById("viewProfileModal");
+    const editUsername = document.getElementById("editUsername");
+    const editAvatarFile = document.getElementById("editAvatarFile");
+    const editStatus = document.getElementById("editStatus");
+    const editBio = document.getElementById("editBio");
+    const editAvatarPreview = document.getElementById("editAvatarPreview");
+    
+    // Generate room code
     function generateRoomCode() {
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
         let code = '';
@@ -409,14 +489,14 @@
         return code;
     }
     
-    // Media preview helper
+    // Media preview
     function getMediaPreview(fileDataURL, fileName, fileType) {
         const ext = fileName.split('.').pop().toLowerCase();
-        if (fileType.startsWith('image/')) {
+        if (fileType?.startsWith('image/')) {
             return `<div class="media-preview"><img src="${fileDataURL}" alt="${escapeHtml(fileName)}"></div>`;
-        } else if (fileType.startsWith('audio/') || ext === 'mp3' || ext === 'wav' || ext === 'ogg') {
+        } else if (fileType?.startsWith('audio/') || ext === 'mp3' || ext === 'wav') {
             return `<div class="media-preview"><audio controls src="${fileDataURL}"></audio></div>`;
-        } else if (fileType.startsWith('video/') || ext === 'mp4' || ext === 'webm' || ext === 'mov') {
+        } else if (fileType?.startsWith('video/') || ext === 'mp4' || ext === 'webm') {
             return `<div class="media-preview"><video controls src="${fileDataURL}"></video></div>`;
         }
         return null;
@@ -424,15 +504,22 @@
     
     function renderMessages() {
         messagesContainer.innerHTML = "";
-        messages.forEach(msg => {
+        messages.forEach((msg, idx) => {
             const isOwn = msg.sender === "me";
-            const displayName = isOwn ? myProfile.username : (remoteProfile.username || "Peer");
-            let avatarURL = isOwn ? myProfile.avatarURL : remoteProfile.avatarURL;
+            const profile = isOwn ? myProfile : remoteProfile;
+            const displayName = profile.username;
+            let avatarURL = profile.avatarURL;
             const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "just now";
             const msgDiv = document.createElement("div");
             msgDiv.className = "message";
+            msgDiv.onclick = (e) => {
+                if (e.target.classList.contains('message-avatar') || e.target.classList.contains('message-username')) {
+                    viewProfile(isOwn ? myProfile : remoteProfile);
+                }
+            };
             const avatarDiv = document.createElement("div");
             avatarDiv.className = "message-avatar";
+            avatarDiv.onclick = () => viewProfile(isOwn ? myProfile : remoteProfile);
             if (avatarURL) {
                 avatarDiv.style.backgroundImage = `url('${avatarURL}')`;
                 avatarDiv.style.backgroundSize = "cover";
@@ -445,18 +532,15 @@
             contentDiv.className = "message-content";
             let mediaHtml = "";
             if (msg.type === 'file' && msg.fileDataURL) {
-                const preview = getMediaPreview(msg.fileDataURL, msg.fileName, msg.fileType || '');
-                if (preview) {
-                    mediaHtml = preview;
-                } else {
-                    mediaHtml = `<div class="file-attachment" onclick="downloadFile('${msg.fileDataURL}', '${msg.fileName}')">
-                        <i class="fas fa-file"></i><span>${escapeHtml(msg.fileName)} (${formatBytes(msg.fileSize)})</span><i class="fas fa-download"></i>
-                    </div>`;
-                }
+                const preview = getMediaPreview(msg.fileDataURL, msg.fileName, msg.fileType);
+                if (preview) mediaHtml = preview;
+                else mediaHtml = `<div class="file-attachment" onclick="downloadFile('${msg.fileDataURL}', '${msg.fileName}')">
+                    <i class="fas fa-file"></i><span>${escapeHtml(msg.fileName)} (${formatBytes(msg.fileSize)})</span><i class="fas fa-download"></i>
+                </div>`;
             }
             contentDiv.innerHTML = `
                 <div class="message-header">
-                    <span class="message-username">${escapeHtml(displayName)}</span>
+                    <span class="message-username" onclick="viewProfile(${isOwn ? 'myProfile' : 'remoteProfile'})">${escapeHtml(displayName)}</span>
                     <span class="message-timestamp">${timestamp}</span>
                 </div>
                 <div class="message-text">${msg.type === 'text' ? escapeHtml(msg.content) : ''}</div>
@@ -468,27 +552,17 @@
         });
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
-    
-    function downloadFile(url, name) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = name;
-        a.click();
-    }
-    window.downloadFile = downloadFile;
+    window.viewProfile = function(profile) { showUserProfile(profile); };
+    window.downloadFile = function(url, name) { const a = document.createElement('a'); a.href = url; a.download = name; a.click(); };
     
     function addMessage(type, content, sender, extra = {}) {
         messages.push({ type, content, sender, timestamp: new Date().toISOString(), ...extra });
         renderMessages();
     }
-    
     function addSystemMessage(text) { addMessage('text', text, 'system'); }
     
     function sendData(data) {
-        if (currentConnection && currentConnection.open) {
-            currentConnection.send(JSON.stringify(data));
-            return true;
-        }
+        if (currentConnection?.open) { currentConnection.send(JSON.stringify(data)); return true; }
         return false;
     }
     
@@ -511,65 +585,52 @@
     }
     
     function sendProfileUpdate() {
-        if (connected) sendData({ type: "profile", username: myProfile.username, avatarURL: myProfile.avatarURL });
+        if (connected) sendData({ type: "profile", username: myProfile.username, avatarURL: myProfile.avatarURL, status: myProfile.status, bio: myProfile.bio });
     }
     
     // Call functions
-    async function startCall(isVideo = true) {
-        if (!connected) { addSystemMessage("Not connected to anyone."); return; }
-        if (isCallActive) { addSystemMessage("Call already active."); return; }
+    async function startCall() {
+        if (!connected) { addSystemMessage("Not connected."); return; }
+        if (isCallActive) return;
         try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             const callObj = currentConnection.call(remoteProfile.peerId || currentConnection.peer, localStream);
-            setupCall(callObj);
+            call = callObj;
+            call.on('stream', remoteStream => remoteVideo.srcObject = remoteStream);
+            call.on('close', () => endCall());
             videoContainer.classList.add("active");
-            document.getElementById("remoteVideo").srcObject = localStream;
+            remoteVideo.srcObject = localStream;
             isCallActive = true;
             callBtn.style.display = "none";
             hangupBtn.style.display = "flex";
-            addSystemMessage("📞 Starting call...");
-        } catch(err) { addSystemMessage("Could not access camera/mic: " + err.message); }
-    }
-    
-    function setupCall(callObj) {
-        call = callObj;
-        call.on('stream', remoteStream => {
-            remoteVideo.srcObject = remoteStream;
-        });
-        call.on('close', () => endCall());
-        call.on('error', () => endCall());
+            addSystemMessage("📞 Call started");
+        } catch(err) { addSystemMessage("Camera/mic error: " + err.message); }
     }
     
     function endCall() {
         if (localStream) localStream.getTracks().forEach(t => t.stop());
         if (call) call.close();
         localStream = null;
-        remoteStream = null;
         call = null;
         isCallActive = false;
         videoContainer.classList.remove("active");
         callBtn.style.display = "flex";
         hangupBtn.style.display = "none";
-        addSystemMessage("Call ended.");
     }
     
     function toggleMute() {
         if (localStream) {
-            const audioTrack = localStream.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = !audioTrack.enabled;
-                muteAudioBtn.innerHTML = audioTrack.enabled ? '<i class="fas fa-microphone"></i> Mute' : '<i class="fas fa-microphone-slash"></i> Unmute';
-            }
+            const track = localStream.getAudioTracks()[0];
+            if (track) track.enabled = !track.enabled;
+            muteAudioBtn.innerHTML = track?.enabled ? '<i class="fas fa-microphone"></i> Mute' : '<i class="fas fa-microphone-slash"></i> Unmute';
         }
     }
     
     function toggleVideo() {
         if (localStream) {
-            const videoTrack = localStream.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = !videoTrack.enabled;
-                muteVideoBtn.innerHTML = videoTrack.enabled ? '<i class="fas fa-video"></i> Video' : '<i class="fas fa-video-slash"></i> Video';
-            }
+            const track = localStream.getVideoTracks()[0];
+            if (track) track.enabled = !track.enabled;
+            muteVideoBtn.innerHTML = track?.enabled ? '<i class="fas fa-video"></i> Video' : '<i class="fas fa-video-slash"></i> Video';
         }
     }
     
@@ -583,13 +644,15 @@
         callControls.style.display = "flex";
         sendProfileUpdate();
         
-        conn.on('open', () => addSystemMessage("Data channel open."));
+        conn.on('open', () => {});
         conn.on('data', data => {
             try {
                 const msg = JSON.parse(data);
                 if (msg.type === "profile") {
                     remoteProfile.username = msg.username;
                     remoteProfile.avatarURL = msg.avatarURL || "";
+                    remoteProfile.status = msg.status || "🟢 Online";
+                    remoteProfile.bio = msg.bio || "";
                     if (remoteProfile.avatarURL) {
                         remoteAvatarSmall.style.backgroundImage = `url('${remoteProfile.avatarURL}')`;
                         remoteAvatarSmall.style.backgroundSize = "cover";
@@ -598,34 +661,30 @@
                         remoteAvatarSmall.style.background = "#3c3f45";
                         remoteAvatarSmall.innerHTML = '<i class="fas fa-user"></i>';
                     }
-                    remoteNameSpan.innerText = remoteProfile.username;
+                    remoteNameSpan.innerText = remoteProfile.username + " " + (remoteProfile.status || "");
                     renderMessages();
                 } else if (msg.type === "chat") {
                     if (msg.subType === "text") addMessage('text', msg.text, 'them');
                     else if (msg.subType === "file") addMessage('file', '', 'them', { fileName: msg.fileName, fileSize: msg.fileSize, fileDataURL: msg.fileDataURL, fileType: msg.fileType });
                 }
-            } catch(e) { console.warn(e); }
+            } catch(e) {}
         });
         conn.on('close', () => disconnectFromPeer());
-        conn.on('error', () => disconnectFromPeer());
-        
-        // Handle incoming calls
         conn.on('call', incoming => {
             if (isCallActive) { incoming.close(); return; }
             if (confirm(`${remoteProfile.username} is calling. Accept?`)) {
                 navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
                     localStream = stream;
                     incoming.answer(stream);
-                    setupCall(incoming);
+                    call = incoming;
+                    call.on('stream', remoteStream => remoteVideo.srcObject = remoteStream);
                     videoContainer.classList.add("active");
-                    document.getElementById("remoteVideo").srcObject = localStream;
+                    remoteVideo.srcObject = localStream;
                     isCallActive = true;
                     callBtn.style.display = "none";
                     hangupBtn.style.display = "flex";
-                }).catch(err => addSystemMessage("Could not answer: " + err.message));
-            } else {
-                incoming.close();
-            }
+                }).catch(() => {});
+            } else incoming.close();
         });
     }
     
@@ -636,15 +695,13 @@
         currentConnection = null;
         connStatusSpan.innerHTML = "⚫ Disconnected";
         callControls.style.display = "none";
-        remoteProfile = { username: "Unknown", avatarURL: "" };
+        remoteProfile = { username: "Unknown", avatarURL: "", status: "⚫ Offline", bio: "" };
         remoteNameSpan.innerText = "Not connected";
         remoteAvatarSmall.style.background = "#3c3f45";
         remoteAvatarSmall.innerHTML = '<i class="fas fa-user-slash"></i>';
         if (peer) { peer.destroy(); peer = null; }
         currentRoomId = null;
         roomIdDisplay.value = "";
-        createRoomBtn.disabled = false;
-        joinRoomBtn.disabled = false;
     }
     
     function createRoom() {
@@ -678,26 +735,31 @@
         joinRoomBtn.disabled = true;
         if (peer) peer.destroy();
         peer = new Peer(undefined, { debug: 0 });
-        let timeout = setTimeout(() => { addSystemMessage("Timeout. Room may not exist."); disconnectFromPeer(); isJoiningRoom = false; joinRoomBtn.disabled = false; }, 15000);
+        let timeout = setTimeout(() => { addSystemMessage("Timeout."); disconnectFromPeer(); isJoiningRoom = false; joinRoomBtn.disabled = false; }, 15000);
         peer.on('open', () => {
             currentRoomId = roomCode;
             roomIdDisplay.value = roomCode;
             const conn = peer.connect(roomCode, { reliable: true });
             conn.on('open', () => { clearTimeout(timeout); setupConnection(conn); isJoiningRoom = false; joinRoomBtn.disabled = false; });
-            conn.on('error', () => { clearTimeout(timeout); addSystemMessage("Could not connect."); disconnectFromPeer(); isJoiningRoom = false; joinRoomBtn.disabled = false; });
+            conn.on('error', () => { clearTimeout(timeout); disconnectFromPeer(); isJoiningRoom = false; joinRoomBtn.disabled = false; });
         });
-        peer.on('error', () => { clearTimeout(timeout); addSystemMessage("Connection error."); disconnectFromPeer(); isJoiningRoom = false; joinRoomBtn.disabled = false; });
+        peer.on('error', () => { clearTimeout(timeout); disconnectFromPeer(); isJoiningRoom = false; joinRoomBtn.disabled = false; });
     }
     
     // Profile functions
     function loadProfile() {
-        const saved = localStorage.getItem("p2p_profile");
-        if (saved) { try { const p = JSON.parse(saved); myProfile.username = p.username; myProfile.avatarURL = p.avatarURL || ""; } catch(e) {} }
+        const saved = localStorage.getItem("p2p_profile_full");
+        if (saved) {
+            try { const p = JSON.parse(saved); myProfile = { ...myProfile, ...p }; } catch(e) {}
+        }
         updateProfileUI();
     }
-    function saveProfile() { localStorage.setItem("p2p_profile", JSON.stringify({ username: myProfile.username, avatarURL: myProfile.avatarURL })); }
+    function saveProfileToStorage() {
+        localStorage.setItem("p2p_profile_full", JSON.stringify({ username: myProfile.username, avatarURL: myProfile.avatarURL, status: myProfile.status, bio: myProfile.bio }));
+    }
     function updateProfileUI() {
         currentUsernameSpan.innerText = myProfile.username;
+        currentUserStatusSpan.innerText = myProfile.status;
         if (myProfile.avatarURL) {
             currentUserAvatarDiv.style.backgroundImage = `url('${myProfile.avatarURL}')`;
             currentUserAvatarDiv.style.backgroundSize = "cover";
@@ -709,23 +771,52 @@
         renderMessages();
         if (connected) sendProfileUpdate();
     }
-    function showProfileModal() {
-        document.getElementById("profileUsername").value = myProfile.username;
-        document.getElementById("profileModal").style.display = "flex";
-    }
-    function closeProfileModal() { document.getElementById("profileModal").style.display = "none"; }
-    function saveProfileChanges() {
-        const newName = document.getElementById("profileUsername").value.trim();
-        if (newName) myProfile.username = newName;
-        const avatarFile = document.getElementById("profileAvatarFile").files[0];
-        if (avatarFile && avatarFile.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = e => { myProfile.avatarURL = e.target.result; saveProfile(); updateProfileUI(); closeProfileModal(); };
-            reader.readAsDataURL(avatarFile);
-        } else { saveProfile(); updateProfileUI(); closeProfileModal(); }
+    
+    function showEditProfile() {
+        editUsername.value = myProfile.username;
+        editStatus.value = myProfile.status;
+        editBio.value = myProfile.bio || "";
+        if (myProfile.avatarURL) editAvatarPreview.style.backgroundImage = `url('${myProfile.avatarURL}')`;
+        else editAvatarPreview.style.background = "#5865f2";
+        editAvatarPreview.style.backgroundSize = "cover";
+        editAvatarPreview.style.backgroundPosition = "center";
+        editProfileModal.style.display = "flex";
     }
     
-    function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+    function saveEditProfile() {
+        const newUsername = editUsername.value.trim();
+        if (newUsername) myProfile.username = newUsername;
+        myProfile.status = editStatus.value;
+        myProfile.bio = editBio.value;
+        const avatarFile = editAvatarFile.files[0];
+        if (avatarFile && avatarFile.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onload = e => { myProfile.avatarURL = e.target.result; saveProfileToStorage(); updateProfileUI(); };
+            reader.readAsDataURL(avatarFile);
+        } else { saveProfileToStorage(); updateProfileUI(); }
+        editProfileModal.style.display = "none";
+        editAvatarFile.value = "";
+    }
+    
+    function showUserProfile(profile) {
+        document.getElementById("viewUsername").innerText = profile.username;
+        document.getElementById("viewStatus").innerHTML = profile.status || "🟢 Online";
+        document.getElementById("viewBio").innerHTML = profile.bio || "No bio yet.";
+        const avatarDiv = document.getElementById("viewAvatar");
+        if (profile.avatarURL) {
+            avatarDiv.style.backgroundImage = `url('${profile.avatarURL}')`;
+            avatarDiv.style.backgroundSize = "cover";
+            avatarDiv.innerHTML = "";
+        } else {
+            avatarDiv.style.background = "#5865f2";
+            avatarDiv.innerHTML = profile.username.charAt(0).toUpperCase();
+        }
+        viewProfileModal.style.display = "flex";
+    }
+    
+    remoteMemberItem.onclick = () => { if (connected && remoteProfile.username !== "Unknown") showUserProfile(remoteProfile); };
+    
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     function formatBytes(b) { if (b===0) return '0 B'; const k=1024, sizes=['B','KB','MB']; const i=Math.floor(Math.log(b)/Math.log(k)); return parseFloat((b/Math.pow(k,i)).toFixed(1))+' '+sizes[i]; }
     
     // Event listeners
@@ -736,18 +827,18 @@
     createRoomBtn.onclick = createRoom;
     joinRoomBtn.onclick = joinRoom;
     disconnectBtn.onclick = disconnectFromPeer;
-    userProfileBtn.onclick = showProfileModal;
-    saveProfileBtn.onclick = saveProfileChanges;
-    closeModalBtn.onclick = closeProfileModal;
-    callBtn.onclick = () => startCall(true);
+    userProfileBtn.onclick = showEditProfile;
+    callBtn.onclick = startCall;
     hangupBtn.onclick = endCall;
     muteAudioBtn.onclick = toggleMute;
     muteVideoBtn.onclick = toggleVideo;
-    window.onclick = e => { if(e.target === document.getElementById("profileModal")) closeProfileModal(); };
+    document.getElementById("saveEditProfileBtn").onclick = saveEditProfile;
+    document.getElementById("closeEditModalBtn").onclick = () => editProfileModal.style.display = "none";
+    document.getElementById("closeModalBtn")?.addEventListener("click", () => viewProfileModal.style.display = "none");
+    window.onclick = e => { if (e.target === editProfileModal) editProfileModal.style.display = "none"; if (e.target === viewProfileModal) viewProfileModal.style.display = "none"; };
     
     // Start
-    addSystemMessage("🎤 Ready! Create or join a room with a 6-character code.");
-    addSystemMessage("📞 Click Call to start video chat. MP3/MP4 files play inline!");
+    addSystemMessage("🎤 Ready! Create/join a room. Click any avatar to view profile!");
     loadProfile();
 </script>
 </body>
