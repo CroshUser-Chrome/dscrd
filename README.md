@@ -13,3 +13,12 @@ Features Include:
 - Very basic profile customization
 - Able to send files
 - Audio and video call
+- Typing indicator
+- Read/Delivered Messages
+- Markdown/formatted messages
+- Emoji Picker
+- Mentioning system
+- GIF search
+- Custom status
+- Notification sounds
+- Edit/Delete messages
