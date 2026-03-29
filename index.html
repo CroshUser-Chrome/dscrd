@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        /* (same styles as before – unchanged) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -234,9 +233,9 @@
             </div>
             <div class="room-panel">
                 <span style="font-size:12px;">🔑 Room ID:</span>
-                <input type="text" id="roomIdDisplay" readonly style="width:140px; background:#111214;" placeholder="Not created">
+                <input type="text" id="roomIdDisplay" readonly style="width:180px; background:#111214;" placeholder="Not created">
                 <button id="createRoomBtn" class="small-btn"><i class="fas fa-plus"></i> Create Room</button>
-                <input type="text" id="joinRoomId" placeholder="Enter Room ID to join" style="width:150px;">
+                <input type="text" id="joinRoomId" placeholder="Enter Room ID to join" style="width:180px;">
                 <button id="joinRoomBtn" class="small-btn"><i class="fas fa-sign-in-alt"></i> Join</button>
                 <button id="disconnectBtn" class="small-btn" style="background:#da373c;">Disconnect</button>
             </div>
@@ -288,13 +287,13 @@
 </div>
 
 <script>
-    // ---------- FIXED: Better room creation & connection handling ----------
+    // ---------- SIMPLE & RELIABLE: PeerJS auto-generates IDs ----------
     let peer = null;
     let currentConnection = null;
     let connected = false;
     let currentRoomId = null;
-    let isCreatingRoom = false;   // prevent multiple create attempts
-    let isJoiningRoom = false;    // prevent multiple join attempts
+    let isCreatingRoom = false;
+    let isJoiningRoom = false;
 
     // Profile
     let myProfile = {
@@ -438,7 +437,6 @@
     // Set up connection handlers
     function setupConnection(conn) {
         if (currentConnection) {
-            // Avoid duplicate connections
             conn.close();
             return;
         }
@@ -495,9 +493,10 @@
             roomIdDisplay.value = "";
             addSystemMessage("Left room. You can create or join another.");
         }
-        // Re-enable buttons if they were disabled
         createRoomBtn.disabled = false;
         joinRoomBtn.disabled = false;
+        isCreatingRoom = false;
+        isJoiningRoom = false;
     }
 
     function updateRemoteUI() {
@@ -518,8 +517,8 @@
         }
     }
 
-    // Create room with automatic retry if ID conflict
-    async function createRoom() {
+    // Create room: let PeerJS generate a random ID (unique)
+    function createRoom() {
         if (currentRoomId) {
             addSystemMessage("Already in a room. Disconnect first.");
             return;
@@ -528,25 +527,22 @@
         isCreatingRoom = true;
         createRoomBtn.disabled = true;
 
-        // Generate a 6-character room ID
-        const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        addSystemMessage("Creating room...");
         
-        // Destroy any existing peer
+        // Destroy existing peer if any
         if (peer) {
             peer.destroy();
             peer = null;
         }
         
-        addSystemMessage(`Attempting to create room "${roomId}"...`);
+        // Create a new peer with auto-generated ID
+        peer = new Peer(undefined, { debug: 0 });
         
-        // Create a new peer with this exact ID
-        peer = new Peer(roomId, { debug: 0 });
-        
-        peer.on('open', () => {
-            currentRoomId = roomId;
-            roomIdDisplay.value = roomId;
-            addSystemMessage(`✅ Room created: ${roomId}. Share this ID with a friend.`);
-            addSystemMessage("📡 Waiting for them to join...");
+        peer.on('open', id => {
+            currentRoomId = id;
+            roomIdDisplay.value = id;
+            addSystemMessage(`✅ Room created! ID: ${id}`);
+            addSystemMessage("📡 Waiting for someone to join...");
             isCreatingRoom = false;
             createRoomBtn.disabled = false;
         });
@@ -561,26 +557,19 @@
         
         peer.on('error', err => {
             console.error(err);
-            if (err.type === 'unavailable-id') {
-                addSystemMessage(`⚠️ Room ID "${roomId}" is already taken. Trying another...`);
-                // Retry with new ID
-                createRoom(); // this will run again, but careful with recursion
-            } else {
-                addSystemMessage(`❌ Failed to create room: ${err.message}`);
-                isCreatingRoom = false;
-                createRoomBtn.disabled = false;
-                // Clean up
-                if (peer) {
-                    peer.destroy();
-                    peer = null;
-                }
+            addSystemMessage(`❌ Failed to create room: ${err.message}`);
+            isCreatingRoom = false;
+            createRoomBtn.disabled = false;
+            if (peer) {
+                peer.destroy();
+                peer = null;
             }
         });
     }
 
-    // Join room
+    // Join room: connect to the given Peer ID
     function joinRoom() {
-        const roomId = joinRoomId.value.trim().toUpperCase();
+        const roomId = joinRoomId.value.trim();
         if (!roomId) {
             addSystemMessage("Enter a Room ID to join.");
             return;
@@ -593,15 +582,15 @@
         isJoiningRoom = true;
         joinRoomBtn.disabled = true;
         
+        addSystemMessage(`🔗 Joining room ${roomId}...`);
+        
         // Destroy existing peer if any
         if (peer) {
             peer.destroy();
             peer = null;
         }
         
-        addSystemMessage(`🔗 Joining room ${roomId}...`);
-        
-        // Create a new peer with a random ID (we are the joiner)
+        // Create a new peer (joiner gets a random ID)
         peer = new Peer(undefined, { debug: 0 });
         
         let connectionTimeout = setTimeout(() => {
@@ -611,13 +600,12 @@
                 isJoiningRoom = false;
                 joinRoomBtn.disabled = false;
             }
-        }, 15000); // 15 seconds timeout
+        }, 15000);
         
         peer.on('open', () => {
             currentRoomId = roomId;
             roomIdDisplay.value = roomId;
             
-            // Connect to the room ID
             const conn = peer.connect(roomId, { reliable: true });
             conn.on('open', () => {
                 clearTimeout(connectionTimeout);
@@ -625,7 +613,7 @@
                 isJoiningRoom = false;
                 joinRoomBtn.disabled = false;
             });
-            conn.on('error', (err) => {
+            conn.on('error', err => {
                 clearTimeout(connectionTimeout);
                 addSystemMessage(`❌ Could not connect to peer ${roomId}: ${err.message}`);
                 disconnectFromPeer();
