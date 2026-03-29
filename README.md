@@ -12,3 +12,4 @@ how to use:
 Features Include:
 - Very basic profile customization
 - Able to send files
+- Audio and video call
