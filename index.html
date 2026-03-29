@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P Discord · Short Room Codes (Always)</title>
+    <title>P2P Discord · Calls + Media Embed</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
@@ -102,9 +102,52 @@
             cursor: pointer;
             font-size: 12px;
         }
-        .small-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .call-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #1e1f22;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .call-btn {
+            background: #3c3f45;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .call-btn.active { background: #da373c; }
+        .call-btn.ringing { background: #faa81a; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        .video-container {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 320px;
+            background: #1e1f22;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 100;
+            display: none;
+        }
+        .video-container.active { display: block; }
+        .video-container video {
+            width: 100%;
+            background: #000;
+        }
+        .video-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 8px;
+            background: #2b2d31;
         }
         .messages-container { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
         .message { display: flex; gap: 16px; align-items: flex-start; }
@@ -117,8 +160,9 @@
             font-weight: bold;
             background-size: cover;
             background-position: center;
+            flex-shrink: 0;
         }
-        .message-header { display: flex; align-items: baseline; gap: 8px; }
+        .message-header { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
         .message-username { font-weight: 600; color: #f2f3f5; }
         .message-timestamp { font-size: 10px; color: #6d6f78; }
         .message-text { margin-top: 4px; color: #dbdee1; word-break: break-word; }
@@ -126,11 +170,25 @@
             background: #2b2d31;
             border-radius: 8px;
             padding: 8px 12px;
+            margin-top: 6px;
             display: inline-flex;
             align-items: center;
             gap: 10px;
             cursor: pointer;
             border: 1px solid #3c3f45;
+        }
+        .media-preview {
+            margin-top: 8px;
+            max-width: 400px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .media-preview img, .media-preview video {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+        .media-preview audio {
+            width: 300px;
         }
         .input-area { padding: 16px; background: #2b2d31; border-top: 1px solid #1e1f22; }
         .message-input-wrapper {
@@ -177,7 +235,6 @@
         }
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #5865f2; background-size: cover; }
         .user-info { flex: 1; font-size: 14px; font-weight: 500; }
-        .user-status { font-size: 11px; color: #a3a6aa; }
         .profile-modal {
             display: none;
             position: fixed;
@@ -194,7 +251,7 @@
             border-radius: 16px;
             padding: 20px;
         }
-        .modal-card input, .modal-card .file-input-label {
+        .modal-card input {
             width: 100%;
             background: #1e1f22;
             border: none;
@@ -210,6 +267,7 @@
             .members-area { display: none; }
             .channels-bar { width: 60px; }
             .channel-item span { display: none; }
+            .video-container { width: 280px; bottom: 70px; right: 10px; }
         }
     </style>
 </head>
@@ -234,20 +292,22 @@
                 <i class="fas fa-hashtag"></i> general
                 <span class="connection-status" id="connStatus">⚫ Disconnected</span>
             </div>
-            <div class="room-panel">
-                <span style="font-size:12px;">🔑 Room Code:</span>
-                <input type="text" id="roomIdDisplay" readonly style="width:100px; background:#111214; font-size:18px; font-weight:bold;" placeholder="------">
-                <button id="createRoomBtn" class="small-btn"><i class="fas fa-plus"></i> Create Room</button>
-                <input type="text" id="joinRoomId" placeholder="Enter code" style="width:100px; font-size:16px; text-transform:uppercase;" maxlength="6">
-                <button id="joinRoomBtn" class="small-btn"><i class="fas fa-sign-in-alt"></i> Join</button>
-                <button id="disconnectBtn" class="small-btn" style="background:#da373c;">Leave</button>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <div class="call-controls" id="callControls" style="display: none;">
+                    <button id="callBtn" class="call-btn"><i class="fas fa-phone"></i> Call</button>
+                    <button id="hangupBtn" class="call-btn" style="display:none; background:#da373c;"><i class="fas fa-phone-slash"></i> Hang Up</button>
+                </div>
+                <div class="room-panel">
+                    <span style="font-size:12px;">🔑 Code:</span>
+                    <input type="text" id="roomIdDisplay" readonly style="width:80px; font-size:18px;">
+                    <button id="createRoomBtn" class="small-btn"><i class="fas fa-plus"></i> Create</button>
+                    <input type="text" id="joinRoomId" placeholder="Code" style="width:80px; text-transform:uppercase;" maxlength="6">
+                    <button id="joinRoomBtn" class="small-btn"><i class="fas fa-sign-in-alt"></i> Join</button>
+                    <button id="disconnectBtn" class="small-btn" style="background:#da373c;">Leave</button>
+                </div>
             </div>
         </div>
-        <div class="messages-container" id="messagesContainer">
-            <div class="message" style="justify-content:center; opacity:0.7;">
-                🎮 Create a room to get a 6-character code. Share it with a friend!
-            </div>
-        </div>
+        <div class="messages-container" id="messagesContainer"></div>
         <div class="input-area">
             <div class="message-input-wrapper">
                 <button id="attachFileBtn" class="attach-btn"><i class="fas fa-paperclip"></i></button>
@@ -259,28 +319,33 @@
     </div>
     <div class="members-area">
         <div class="member-header">Connected Peer</div>
-        <div class="member-list" id="memberList">
+        <div class="member-list">
             <div class="member-item">
-                <div class="member-avatar-small" id="remoteAvatarSmall" style="background:#3c3f45;"><i class="fas fa-user"></i></div>
-                <div><strong id="remoteName">Not connected</strong><br><span style="font-size:11px;">offline</span></div>
+                <div class="member-avatar-small" id="remoteAvatarSmall"><i class="fas fa-user"></i></div>
+                <div><strong id="remoteName">Not connected</strong></div>
             </div>
         </div>
     </div>
 </div>
 <div class="user-panel" id="userProfileBtn">
-    <div class="user-avatar" id="currentUserAvatar" style="background:#5865f2;"><i class="fas fa-user" style="display:flex; justify-content:center; align-items:center; height:100%;"></i></div>
+    <div class="user-avatar" id="currentUserAvatar"></div>
     <div class="user-info">
         <div id="currentUsername">Loading...</div>
         <div class="user-status">Click to customize</div>
     </div>
     <i class="fas fa-cog"></i>
 </div>
+<div id="videoContainer" class="video-container">
+    <video id="remoteVideo" autoplay playsinline></video>
+    <div class="video-controls">
+        <button id="muteAudioBtn" class="small-btn"><i class="fas fa-microphone"></i> Mute</button>
+        <button id="muteVideoBtn" class="small-btn"><i class="fas fa-video"></i> Video</button>
+    </div>
+</div>
 <div id="profileModal" class="profile-modal">
     <div class="modal-card">
         <h3>Customize Profile</h3>
-        <label>Username</label>
         <input type="text" id="profileUsername" placeholder="Username">
-        <label>Avatar (image)</label>
         <input type="file" id="profileAvatarFile" accept="image/*">
         <div class="modal-buttons">
             <button id="saveProfileBtn">Save</button>
@@ -290,7 +355,7 @@
 </div>
 
 <script>
-    // ---------- ALWAYS SHORT 6-CHARACTER ROOM CODES ----------
+    // ---------- P2P Chat + Calls + Media Embed ----------
     let peer = null;
     let currentConnection = null;
     let connected = false;
@@ -298,16 +363,20 @@
     let isCreatingRoom = false;
     let isJoiningRoom = false;
     let retryCount = 0;
-
+    
+    // Call variables
+    let localStream = null;
+    let remoteStream = null;
+    let call = null;
+    let isCallActive = false;
+    let incomingCall = null;
+    
     // Profile
-    let myProfile = {
-        username: "User" + Math.floor(Math.random() * 1000),
-        avatarURL: ""
-    };
+    let myProfile = { username: "User" + Math.floor(Math.random() * 1000), avatarURL: "" };
     let remoteProfile = { username: "Unknown", avatarURL: "" };
-
+    
     let messages = [];
-
+    
     // DOM elements
     const messagesContainer = document.getElementById("messagesContainer");
     const messageInput = document.getElementById("messageInput");
@@ -324,25 +393,35 @@
     const createRoomBtn = document.getElementById("createRoomBtn");
     const joinRoomBtn = document.getElementById("joinRoomBtn");
     const disconnectBtn = document.getElementById("disconnectBtn");
-
-    const profileModal = document.getElementById("profileModal");
-    const profileUsername = document.getElementById("profileUsername");
-    const profileAvatarFile = document.getElementById("profileAvatarFile");
-    const saveProfileBtn = document.getElementById("saveProfileBtn");
-    const closeModalBtn = document.getElementById("closeModalBtn");
-    const userProfileBtn = document.getElementById("userProfileBtn");
-
+    const callControls = document.getElementById("callControls");
+    const callBtn = document.getElementById("callBtn");
+    const hangupBtn = document.getElementById("hangupBtn");
+    const videoContainer = document.getElementById("videoContainer");
+    const remoteVideo = document.getElementById("remoteVideo");
+    const muteAudioBtn = document.getElementById("muteAudioBtn");
+    const muteVideoBtn = document.getElementById("muteVideoBtn");
+    
     // Generate random 6-character room code
     function generateRoomCode() {
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
         let code = '';
-        for (let i = 0; i < 6; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
+        for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
         return code;
     }
-
-    // Helper: render messages
+    
+    // Media preview helper
+    function getMediaPreview(fileDataURL, fileName, fileType) {
+        const ext = fileName.split('.').pop().toLowerCase();
+        if (fileType.startsWith('image/')) {
+            return `<div class="media-preview"><img src="${fileDataURL}" alt="${escapeHtml(fileName)}"></div>`;
+        } else if (fileType.startsWith('audio/') || ext === 'mp3' || ext === 'wav' || ext === 'ogg') {
+            return `<div class="media-preview"><audio controls src="${fileDataURL}"></audio></div>`;
+        } else if (fileType.startsWith('video/') || ext === 'mp4' || ext === 'webm' || ext === 'mov') {
+            return `<div class="media-preview"><video controls src="${fileDataURL}"></video></div>`;
+        }
+        return null;
+    }
+    
     function renderMessages() {
         messagesContainer.innerHTML = "";
         messages.forEach(msg => {
@@ -364,42 +443,47 @@
             }
             const contentDiv = document.createElement("div");
             contentDiv.className = "message-content";
+            let mediaHtml = "";
+            if (msg.type === 'file' && msg.fileDataURL) {
+                const preview = getMediaPreview(msg.fileDataURL, msg.fileName, msg.fileType || '');
+                if (preview) {
+                    mediaHtml = preview;
+                } else {
+                    mediaHtml = `<div class="file-attachment" onclick="downloadFile('${msg.fileDataURL}', '${msg.fileName}')">
+                        <i class="fas fa-file"></i><span>${escapeHtml(msg.fileName)} (${formatBytes(msg.fileSize)})</span><i class="fas fa-download"></i>
+                    </div>`;
+                }
+            }
             contentDiv.innerHTML = `
                 <div class="message-header">
                     <span class="message-username">${escapeHtml(displayName)}</span>
                     <span class="message-timestamp">${timestamp}</span>
                 </div>
                 <div class="message-text">${msg.type === 'text' ? escapeHtml(msg.content) : ''}</div>
+                ${mediaHtml}
             `;
-            if (msg.type === 'file') {
-                const fileDiv = document.createElement("div");
-                fileDiv.className = "file-attachment";
-                fileDiv.innerHTML = `<i class="fas fa-file"></i><span>${escapeHtml(msg.fileName)} (${formatBytes(msg.fileSize)})</span><i class="fas fa-download"></i>`;
-                fileDiv.onclick = () => {
-                    const a = document.createElement('a');
-                    a.href = msg.fileDataURL;
-                    a.download = msg.fileName;
-                    a.click();
-                };
-                contentDiv.querySelector('.message-text').appendChild(fileDiv);
-            }
             msgDiv.appendChild(avatarDiv);
             msgDiv.appendChild(contentDiv);
             messagesContainer.appendChild(msgDiv);
         });
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
-
+    
+    function downloadFile(url, name) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.click();
+    }
+    window.downloadFile = downloadFile;
+    
     function addMessage(type, content, sender, extra = {}) {
         messages.push({ type, content, sender, timestamp: new Date().toISOString(), ...extra });
         renderMessages();
     }
-
-    function addSystemMessage(text) {
-        addMessage('text', text, 'system');
-    }
-
-    // Send data via connection
+    
+    function addSystemMessage(text) { addMessage('text', text, 'system'); }
+    
     function sendData(data) {
         if (currentConnection && currentConnection.open) {
             currentConnection.send(JSON.stringify(data));
@@ -407,272 +491,211 @@
         }
         return false;
     }
-
+    
     function sendTextMessage(text) {
-        if (!connected) { addSystemMessage("❌ Not connected."); return; }
-        const payload = {
-            type: "chat",
-            subType: "text",
-            text: text,
-            senderName: myProfile.username,
-            senderAvatar: myProfile.avatarURL,
-            timestamp: Date.now()
-        };
-        if (sendData(payload)) addMessage('text', text, 'me');
+        if (!connected) { addSystemMessage("Not connected."); return; }
+        sendData({ type: "chat", subType: "text", text, senderName: myProfile.username, senderAvatar: myProfile.avatarURL });
+        addMessage('text', text, 'me');
     }
-
+    
     function sendFile(file) {
-        if (!connected) { addSystemMessage("❌ Not connected."); return; }
+        if (!connected) { addSystemMessage("Not connected."); return; }
         if (file.size > 25 * 1024 * 1024) { addSystemMessage("File too large (max 25MB)"); return; }
         const reader = new FileReader();
         reader.onload = e => {
             const dataURL = e.target.result;
-            const payload = {
-                type: "chat",
-                subType: "file",
-                fileName: file.name,
-                fileSize: file.size,
-                fileDataURL: dataURL,
-                senderName: myProfile.username,
-                senderAvatar: myProfile.avatarURL,
-                timestamp: Date.now()
-            };
-            if (sendData(payload)) addMessage('file', '', 'me', { fileName: file.name, fileSize: file.size, fileDataURL: dataURL });
+            sendData({ type: "chat", subType: "file", fileName: file.name, fileSize: file.size, fileDataURL: dataURL, fileType: file.type });
+            addMessage('file', '', 'me', { fileName: file.name, fileSize: file.size, fileDataURL: dataURL, fileType: file.type });
         };
         reader.readAsDataURL(file);
     }
-
+    
     function sendProfileUpdate() {
-        if (!connected) return;
-        sendData({ type: "profile", username: myProfile.username, avatarURL: myProfile.avatarURL });
+        if (connected) sendData({ type: "profile", username: myProfile.username, avatarURL: myProfile.avatarURL });
     }
-
-    // Set up connection handlers
-    function setupConnection(conn) {
-        if (currentConnection) {
-            conn.close();
-            return;
+    
+    // Call functions
+    async function startCall(isVideo = true) {
+        if (!connected) { addSystemMessage("Not connected to anyone."); return; }
+        if (isCallActive) { addSystemMessage("Call already active."); return; }
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
+            const callObj = currentConnection.call(remoteProfile.peerId || currentConnection.peer, localStream);
+            setupCall(callObj);
+            videoContainer.classList.add("active");
+            document.getElementById("remoteVideo").srcObject = localStream;
+            isCallActive = true;
+            callBtn.style.display = "none";
+            hangupBtn.style.display = "flex";
+            addSystemMessage("📞 Starting call...");
+        } catch(err) { addSystemMessage("Could not access camera/mic: " + err.message); }
+    }
+    
+    function setupCall(callObj) {
+        call = callObj;
+        call.on('stream', remoteStream => {
+            remoteVideo.srcObject = remoteStream;
+        });
+        call.on('close', () => endCall());
+        call.on('error', () => endCall());
+    }
+    
+    function endCall() {
+        if (localStream) localStream.getTracks().forEach(t => t.stop());
+        if (call) call.close();
+        localStream = null;
+        remoteStream = null;
+        call = null;
+        isCallActive = false;
+        videoContainer.classList.remove("active");
+        callBtn.style.display = "flex";
+        hangupBtn.style.display = "none";
+        addSystemMessage("Call ended.");
+    }
+    
+    function toggleMute() {
+        if (localStream) {
+            const audioTrack = localStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                muteAudioBtn.innerHTML = audioTrack.enabled ? '<i class="fas fa-microphone"></i> Mute' : '<i class="fas fa-microphone-slash"></i> Unmute';
+            }
         }
+    }
+    
+    function toggleVideo() {
+        if (localStream) {
+            const videoTrack = localStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                muteVideoBtn.innerHTML = videoTrack.enabled ? '<i class="fas fa-video"></i> Video' : '<i class="fas fa-video-slash"></i> Video';
+            }
+        }
+    }
+    
+    function setupConnection(conn) {
+        if (currentConnection) { conn.close(); return; }
         currentConnection = conn;
         connected = true;
         connStatusSpan.innerHTML = "🟢 Connected";
-        addSystemMessage(`✅ Connected! Chat with ${remoteProfile.username}`);
+        remoteProfile.peerId = conn.peer;
+        addSystemMessage(`✅ Connected to ${remoteProfile.username}`);
+        callControls.style.display = "flex";
         sendProfileUpdate();
-
-        conn.on('open', () => {
-            addSystemMessage("📡 Connection established!");
-        });
+        
+        conn.on('open', () => addSystemMessage("Data channel open."));
         conn.on('data', data => {
             try {
                 const msg = JSON.parse(data);
                 if (msg.type === "profile") {
                     remoteProfile.username = msg.username;
                     remoteProfile.avatarURL = msg.avatarURL || "";
-                    updateRemoteUI();
-                    addSystemMessage(`👤 Peer joined: ${remoteProfile.username}`);
+                    if (remoteProfile.avatarURL) {
+                        remoteAvatarSmall.style.backgroundImage = `url('${remoteProfile.avatarURL}')`;
+                        remoteAvatarSmall.style.backgroundSize = "cover";
+                        remoteAvatarSmall.innerHTML = "";
+                    } else {
+                        remoteAvatarSmall.style.background = "#3c3f45";
+                        remoteAvatarSmall.innerHTML = '<i class="fas fa-user"></i>';
+                    }
+                    remoteNameSpan.innerText = remoteProfile.username;
                     renderMessages();
                 } else if (msg.type === "chat") {
-                    if (msg.subType === "text") {
-                        addMessage('text', msg.text, 'them');
-                    } else if (msg.subType === "file") {
-                        addMessage('file', '', 'them', { fileName: msg.fileName, fileSize: msg.fileSize, fileDataURL: msg.fileDataURL });
-                    }
+                    if (msg.subType === "text") addMessage('text', msg.text, 'them');
+                    else if (msg.subType === "file") addMessage('file', '', 'them', { fileName: msg.fileName, fileSize: msg.fileSize, fileDataURL: msg.fileDataURL, fileType: msg.fileType });
                 }
             } catch(e) { console.warn(e); }
         });
-        conn.on('close', () => {
-            disconnectFromPeer();
-            addSystemMessage("🔌 Peer disconnected.");
-        });
-        conn.on('error', err => {
-            addSystemMessage(`Connection error: ${err.message}`);
-            disconnectFromPeer();
+        conn.on('close', () => disconnectFromPeer());
+        conn.on('error', () => disconnectFromPeer());
+        
+        // Handle incoming calls
+        conn.on('call', incoming => {
+            if (isCallActive) { incoming.close(); return; }
+            if (confirm(`${remoteProfile.username} is calling. Accept?`)) {
+                navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+                    localStream = stream;
+                    incoming.answer(stream);
+                    setupCall(incoming);
+                    videoContainer.classList.add("active");
+                    document.getElementById("remoteVideo").srcObject = localStream;
+                    isCallActive = true;
+                    callBtn.style.display = "none";
+                    hangupBtn.style.display = "flex";
+                }).catch(err => addSystemMessage("Could not answer: " + err.message));
+            } else {
+                incoming.close();
+            }
         });
     }
-
+    
     function disconnectFromPeer() {
-        if (currentConnection) {
-            currentConnection.close();
-            currentConnection = null;
-        }
+        if (currentConnection) currentConnection.close();
+        if (call) endCall();
         connected = false;
+        currentConnection = null;
         connStatusSpan.innerHTML = "⚫ Disconnected";
+        callControls.style.display = "none";
         remoteProfile = { username: "Unknown", avatarURL: "" };
-        updateRemoteUI();
-        if (peer) {
-            peer.destroy();
-            peer = null;
-        }
+        remoteNameSpan.innerText = "Not connected";
+        remoteAvatarSmall.style.background = "#3c3f45";
+        remoteAvatarSmall.innerHTML = '<i class="fas fa-user-slash"></i>';
+        if (peer) { peer.destroy(); peer = null; }
         currentRoomId = null;
         roomIdDisplay.value = "";
         createRoomBtn.disabled = false;
         joinRoomBtn.disabled = false;
-        isCreatingRoom = false;
-        isJoiningRoom = false;
-        retryCount = 0;
-        addSystemMessage("Left the room. You can create a new one.");
     }
-
-    function updateRemoteUI() {
-        if (connected && remoteProfile.username !== "Unknown") {
-            remoteNameSpan.innerText = remoteProfile.username;
-            if (remoteProfile.avatarURL) {
-                remoteAvatarSmall.style.backgroundImage = `url('${remoteProfile.avatarURL}')`;
-                remoteAvatarSmall.style.backgroundSize = "cover";
-                remoteAvatarSmall.innerHTML = "";
-            } else {
-                remoteAvatarSmall.style.background = "#3c3f45";
-                remoteAvatarSmall.innerHTML = '<i class="fas fa-user"></i>';
-            }
-        } else {
-            remoteNameSpan.innerText = "Not connected";
-            remoteAvatarSmall.style.background = "#3c3f45";
-            remoteAvatarSmall.innerHTML = '<i class="fas fa-user-slash"></i>';
-        }
-    }
-
-    // Create room with SHORT 6-CHARACTER code
+    
     function createRoom() {
-        if (currentRoomId) {
-            addSystemMessage("Already in a room. Click Leave first.");
-            return;
-        }
+        if (currentRoomId) { addSystemMessage("Leave current room first."); return; }
         if (isCreatingRoom) return;
         isCreatingRoom = true;
         createRoomBtn.disabled = true;
-
         const roomCode = generateRoomCode();
-        addSystemMessage(`Creating room with code: ${roomCode}...`);
-        
-        if (peer) {
-            peer.destroy();
-            peer = null;
-        }
-        
+        if (peer) peer.destroy();
         peer = new Peer(roomCode, { debug: 0 });
-        
         peer.on('open', () => {
             currentRoomId = roomCode;
             roomIdDisplay.value = roomCode;
             addSystemMessage(`✅ Room created! Code: ${roomCode}`);
-            addSystemMessage("📡 Share this code. Waiting for someone to join...");
             isCreatingRoom = false;
             createRoomBtn.disabled = false;
-            retryCount = 0;
         });
-        
-        peer.on('connection', conn => {
-            if (currentConnection) {
-                addSystemMessage("Already connected, ignoring.");
-                return;
-            }
-            addSystemMessage("🎉 Someone joined your room!");
-            setupConnection(conn);
-        });
-        
+        peer.on('connection', conn => { if (!currentConnection) setupConnection(conn); });
         peer.on('error', err => {
-            if (err.type === 'unavailable-id') {
-                addSystemMessage(`⚠️ Code "${roomCode}" is taken, trying another...`);
-                if (retryCount < 5) {
-                    retryCount++;
-                    createRoom(); // retry with new code
-                } else {
-                    addSystemMessage("❌ Too many retries. Please try again.");
-                    isCreatingRoom = false;
-                    createRoomBtn.disabled = false;
-                }
-            } else {
-                addSystemMessage(`❌ Error: ${err.message}`);
-                isCreatingRoom = false;
-                createRoomBtn.disabled = false;
-                if (peer) {
-                    peer.destroy();
-                    peer = null;
-                }
-            }
+            if (err.type === 'unavailable-id' && retryCount < 5) { retryCount++; createRoom(); }
+            else { addSystemMessage(`Error: ${err.message}`); isCreatingRoom = false; createRoomBtn.disabled = false; }
         });
     }
-
-    // Join room using short code
+    
     function joinRoom() {
         let roomCode = joinRoomId.value.trim().toUpperCase();
-        if (!roomCode) {
-            addSystemMessage("Enter a room code to join.");
-            return;
-        }
-        if (roomCode.length > 6) {
-            roomCode = roomCode.substring(0, 6);
-        }
-        if (currentRoomId) {
-            addSystemMessage("Already in a room. Click Leave first.");
-            return;
-        }
+        if (!roomCode) { addSystemMessage("Enter a room code."); return; }
+        if (currentRoomId) { addSystemMessage("Leave current room first."); return; }
         if (isJoiningRoom) return;
         isJoiningRoom = true;
         joinRoomBtn.disabled = true;
-        
-        addSystemMessage(`🔗 Joining room ${roomCode}...`);
-        
-        if (peer) {
-            peer.destroy();
-            peer = null;
-        }
-        
+        if (peer) peer.destroy();
         peer = new Peer(undefined, { debug: 0 });
-        
-        let connectionTimeout = setTimeout(() => {
-            if (!connected) {
-                addSystemMessage("⚠️ Connection timeout. Room might not exist.");
-                disconnectFromPeer();
-                isJoiningRoom = false;
-                joinRoomBtn.disabled = false;
-            }
-        }, 15000);
-        
+        let timeout = setTimeout(() => { addSystemMessage("Timeout. Room may not exist."); disconnectFromPeer(); isJoiningRoom = false; joinRoomBtn.disabled = false; }, 15000);
         peer.on('open', () => {
             currentRoomId = roomCode;
             roomIdDisplay.value = roomCode;
-            
             const conn = peer.connect(roomCode, { reliable: true });
-            conn.on('open', () => {
-                clearTimeout(connectionTimeout);
-                setupConnection(conn);
-                isJoiningRoom = false;
-                joinRoomBtn.disabled = false;
-            });
-            conn.on('error', err => {
-                clearTimeout(connectionTimeout);
-                addSystemMessage(`❌ Could not connect to room ${roomCode}: ${err.message}`);
-                disconnectFromPeer();
-                isJoiningRoom = false;
-                joinRoomBtn.disabled = false;
-            });
+            conn.on('open', () => { clearTimeout(timeout); setupConnection(conn); isJoiningRoom = false; joinRoomBtn.disabled = false; });
+            conn.on('error', () => { clearTimeout(timeout); addSystemMessage("Could not connect."); disconnectFromPeer(); isJoiningRoom = false; joinRoomBtn.disabled = false; });
         });
-        
-        peer.on('error', err => {
-            clearTimeout(connectionTimeout);
-            addSystemMessage(`❌ Connection error: ${err.message}`);
-            disconnectFromPeer();
-            isJoiningRoom = false;
-            joinRoomBtn.disabled = false;
-        });
+        peer.on('error', () => { clearTimeout(timeout); addSystemMessage("Connection error."); disconnectFromPeer(); isJoiningRoom = false; joinRoomBtn.disabled = false; });
     }
-
-    // Profile management
+    
+    // Profile functions
     function loadProfile() {
         const saved = localStorage.getItem("p2p_profile");
-        if (saved) {
-            try {
-                const p = JSON.parse(saved);
-                myProfile.username = p.username;
-                myProfile.avatarURL = p.avatarURL || "";
-            } catch(e) {}
-        }
+        if (saved) { try { const p = JSON.parse(saved); myProfile.username = p.username; myProfile.avatarURL = p.avatarURL || ""; } catch(e) {} }
         updateProfileUI();
     }
-    function saveProfile() {
-        localStorage.setItem("p2p_profile", JSON.stringify({ username: myProfile.username, avatarURL: myProfile.avatarURL }));
-    }
+    function saveProfile() { localStorage.setItem("p2p_profile", JSON.stringify({ username: myProfile.username, avatarURL: myProfile.avatarURL })); }
     function updateProfileUI() {
         currentUsernameSpan.innerText = myProfile.username;
         if (myProfile.avatarURL) {
@@ -681,40 +704,30 @@
             currentUserAvatarDiv.innerHTML = "";
         } else {
             currentUserAvatarDiv.style.background = "#5865f2";
-            currentUserAvatarDiv.innerHTML = '<i class="fas fa-user" style="display:flex; justify-content:center; align-items:center; height:100%;"></i>';
+            currentUserAvatarDiv.innerHTML = '<i class="fas fa-user"></i>';
         }
         renderMessages();
         if (connected) sendProfileUpdate();
     }
     function showProfileModal() {
-        profileUsername.value = myProfile.username;
-        profileModal.style.display = "flex";
+        document.getElementById("profileUsername").value = myProfile.username;
+        document.getElementById("profileModal").style.display = "flex";
     }
-    function closeProfileModal() { profileModal.style.display = "none"; }
+    function closeProfileModal() { document.getElementById("profileModal").style.display = "none"; }
     function saveProfileChanges() {
-        const newName = profileUsername.value.trim();
+        const newName = document.getElementById("profileUsername").value.trim();
         if (newName) myProfile.username = newName;
-        const avatarFile = profileAvatarFile.files[0];
+        const avatarFile = document.getElementById("profileAvatarFile").files[0];
         if (avatarFile && avatarFile.type.startsWith("image/")) {
             const reader = new FileReader();
-            reader.onload = e => {
-                myProfile.avatarURL = e.target.result;
-                saveProfile();
-                updateProfileUI();
-                closeProfileModal();
-            };
+            reader.onload = e => { myProfile.avatarURL = e.target.result; saveProfile(); updateProfileUI(); closeProfileModal(); };
             reader.readAsDataURL(avatarFile);
-        } else {
-            saveProfile();
-            updateProfileUI();
-            closeProfileModal();
-        }
+        } else { saveProfile(); updateProfileUI(); closeProfileModal(); }
     }
-
-    // Helpers
+    
     function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     function formatBytes(b) { if (b===0) return '0 B'; const k=1024, sizes=['B','KB','MB']; const i=Math.floor(Math.log(b)/Math.log(k)); return parseFloat((b/Math.pow(k,i)).toFixed(1))+' '+sizes[i]; }
-
+    
     // Event listeners
     sendMsgBtn.onclick = () => { const t = messageInput.value.trim(); if(t) { sendTextMessage(t); messageInput.value = ""; } };
     messageInput.onkeypress = e => { if(e.key === 'Enter') sendMsgBtn.click(); };
@@ -726,10 +739,15 @@
     userProfileBtn.onclick = showProfileModal;
     saveProfileBtn.onclick = saveProfileChanges;
     closeModalBtn.onclick = closeProfileModal;
-    window.onclick = e => { if(e.target === profileModal) closeProfileModal(); };
-
+    callBtn.onclick = () => startCall(true);
+    hangupBtn.onclick = endCall;
+    muteAudioBtn.onclick = toggleMute;
+    muteVideoBtn.onclick = toggleVideo;
+    window.onclick = e => { if(e.target === document.getElementById("profileModal")) closeProfileModal(); };
+    
     // Start
-    addSystemMessage("🎤 Ready! Create a room to get a short 6-character code.");
+    addSystemMessage("🎤 Ready! Create or join a room with a 6-character code.");
+    addSystemMessage("📞 Click Call to start video chat. MP3/MP4 files play inline!");
     loadProfile();
 </script>
 </body>
