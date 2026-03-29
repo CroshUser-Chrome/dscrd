@@ -12,7 +12,7 @@ how to use:
 Features Include:
 - Very basic profile customization
 - Able to send files
-- Audio and video call
+- Audio and video call (SOON)
 - Typing indicator
 - Read/Delivered Messages
 - Markdown/formatted messages
