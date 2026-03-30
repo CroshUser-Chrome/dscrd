@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>DSCRD</title>
+    <title>DSCRD · P2P Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
@@ -49,13 +49,18 @@
             display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
         }
         .chat-title { display: flex; align-items: center; gap: 8px; }
-        .connection-status { font-size: 12px; background: #1e1f22; padding: 4px 10px; border-radius: 20px; }
+        .connection-status {
+            font-size: 12px; background: #1e1f22; padding: 4px 10px; border-radius: 20px;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .connection-status i { font-size: 10px; }
         .room-panel {
             background: #1e1f22; border-radius: 12px; padding: 6px 12px;
             display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
         }
         .room-panel input { background: #111214; border: none; padding: 6px 10px; border-radius: 8px; color: white; font-family: monospace; font-size: 16px; font-weight: bold; text-align: center; width: 80px; }
-        .small-btn { background: #5865f2; border: none; padding: 5px 12px; border-radius: 8px; color: white; cursor: pointer; font-size: 12px; }
+        .small-btn { background: #5865f2; border: none; padding: 5px 12px; border-radius: 8px; color: white; cursor: pointer; font-size: 12px; transition: 0.1s; }
+        .small-btn:active { transform: scale(0.97); }
         .call-controls { display: flex; gap: 8px; background: #1e1f22; padding: 4px 12px; border-radius: 20px; }
         .call-btn { background: #3c3f45; border: none; padding: 6px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; }
         .messages-container { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
@@ -150,6 +155,12 @@
         }
         .video-container.active { display: block; }
         .video-container video { width: 100%; background: #000; }
+        .reconnect-indicator {
+            background: #1e1f22; padding: 8px 12px; border-radius: 20px; font-size: 12px;
+            display: inline-flex; align-items: center; gap: 8px; margin-left: 8px;
+        }
+        .reconnect-indicator i { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @media (max-width: 800px) {
             .members-area { display: none; }
             .channels-bar { width: 60px; }
@@ -177,7 +188,7 @@
         <div class="chat-header">
             <div class="chat-title">
                 <i class="fas fa-hashtag"></i> general
-                <span class="connection-status" id="connStatus">⚫ Disconnected</span>
+                <span class="connection-status" id="connStatus"><i class="fas fa-circle"></i> Disconnected</span>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <div class="call-controls" id="callControls" style="display: none;">
@@ -283,7 +294,7 @@
 </div>
 
 <script>
-    // ========== COMPLETE FEATURE SET ==========
+    // ========== COMPLETE FEATURE SET WITH AUTO-RECONNECT ==========
     let peer = null;
     let currentConnection = null;
     let connected = false;
@@ -294,6 +305,9 @@
     let isCallActive = false;
     let typingTimeout = null;
     let lastTypingTime = 0;
+    let reconnectTimer = null;
+    let reconnectAttempts = 0;
+    let isReconnecting = false;
     
     // Profile
     let myProfile = {
@@ -314,6 +328,9 @@
     let messages = [];
     let nextMsgId = 1;
     let editTargetMsg = null;
+    
+    // --- Saved room data ---
+    let savedRoom = null; // { roomCode, role }
     
     // --- Helper functions ---
     function playSound(type) {
@@ -340,7 +357,6 @@
                            .replace(/~~(.*?)~~/g, '<del>$1</del>')
                            .replace(/`(.*?)`/g, '<code>$1</code>')
                            .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
-        // Mention highlighting
         formatted = formatted.replace(/@(\w+)/g, (match, name) => {
             if (name === myProfile.username) {
                 playSound('mention');
@@ -362,7 +378,7 @@
     function escapeHtml(str) { return String(str).replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     function formatBytes(b) { if (b===0) return '0 B'; const k=1024, sizes=['B','KB','MB']; const i=Math.floor(Math.log(b)/Math.log(k)); return parseFloat((b/Math.pow(k,i)).toFixed(1))+' '+sizes[i]; }
     
-    // --- Rendering messages ---
+    // --- Render messages ---
     function renderMessages() {
         const container = document.getElementById("messagesContainer");
         container.innerHTML = "";
@@ -374,7 +390,6 @@
             const msgDiv = document.createElement("div");
             msgDiv.className = "message";
             msgDiv.dataset.id = msg.id;
-            // Avatar
             const avatarDiv = document.createElement("div");
             avatarDiv.className = "message-avatar";
             if (avatarURL) {
@@ -386,7 +401,6 @@
                 avatarDiv.innerHTML = profile.username.charAt(0).toUpperCase();
             }
             avatarDiv.onclick = () => showUserProfile(profile);
-            // Content
             const contentDiv = document.createElement("div");
             contentDiv.className = "message-content";
             let mediaHtml = "";
@@ -409,7 +423,6 @@
                 ${mediaHtml}
                 <div class="reactions" id="reactions-${msg.id}"></div>
             `;
-            // Actions for own messages
             if (isOwn) {
                 const actionsDiv = document.createElement("div");
                 actionsDiv.className = "message-actions";
@@ -423,7 +436,6 @@
             msgDiv.appendChild(contentDiv);
             container.appendChild(msgDiv);
             
-            // Reactions
             const reactionsDiv = document.getElementById(`reactions-${msg.id}`);
             if (msg.reactions) {
                 Object.entries(msg.reactions).forEach(([emoji, users]) => {
@@ -440,7 +452,6 @@
             addReaction.onclick = () => showReactionPicker(msg.id);
             reactionsDiv.appendChild(addReaction);
         });
-        // Send read receipts for messages from peer that are unread
         messages.forEach(msg => {
             if (msg.senderId === remoteProfile.username && !msg.read) {
                 sendReadReceipt(msg.id);
@@ -448,7 +459,6 @@
             }
         });
         container.scrollTop = container.scrollHeight;
-        // Save history to localStorage
         localStorage.setItem(`chat_history_${currentRoomId}`, JSON.stringify(messages));
     }
     
@@ -632,7 +642,7 @@
         document.getElementById("profileModal").style.display = "none";
     }
     
-    // --- GIF Search (GIPHY public API) ---
+    // --- GIF Search ---
     async function searchGif(query) {
         const url = `https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(query)}&limit=12`;
         try {
@@ -649,7 +659,7 @@
         } catch(e) { console.warn(e); }
     }
     
-    // --- WebRTC Call functions ---
+    // --- WebRTC Call ---
     async function startCall() {
         if (!connected || isCallActive) return;
         try {
@@ -695,20 +705,133 @@
         } else incoming.close();
     }
     
-    // --- PeerJS connection logic (with short 6‑character room codes)---
-    function generateRoomCode() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
-        let code = '';
-        for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-        return code;
+    // --- Auto-reconnect helpers ---
+    function saveRoomToStorage(roomCode, role) {
+        savedRoom = { roomCode, role };
+        localStorage.setItem("lastRoom", JSON.stringify(savedRoom));
     }
     
+    function clearSavedRoom() {
+        savedRoom = null;
+        localStorage.removeItem("lastRoom");
+    }
+    
+    function stopReconnect() {
+        if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
+        isReconnecting = false;
+        reconnectAttempts = 0;
+    }
+    
+    function startReconnectAsJoiner(roomCode) {
+        if (isReconnecting) return;
+        isReconnecting = true;
+        reconnectAttempts = 0;
+        const attemptRejoin = () => {
+            if (!isReconnecting) return;
+            if (connected || currentConnection) {
+                stopReconnect();
+                return;
+            }
+            reconnectAttempts++;
+            const delay = Math.min(3000 * Math.pow(1.5, reconnectAttempts - 1), 30000);
+            addSystemMessage(`🔄 Reconnecting to ${roomCode} (attempt ${reconnectAttempts})...`);
+            // Try to join
+            joinRoomWithCode(roomCode, true);
+            reconnectTimer = setTimeout(attemptRejoin, delay);
+        };
+        attemptRejoin();
+    }
+    
+    function joinRoomWithCode(roomCode, silent = false) {
+        if (currentRoomId) {
+            if (!silent) addSystemMessage("Leave current room first.");
+            return false;
+        }
+        if (window.isJoiningRoom) return false;
+        window.isJoiningRoom = true;
+        if (!silent) document.getElementById("joinRoomBtn").disabled = true;
+        if (peer) peer.destroy();
+        peer = new Peer(undefined, { debug: 0 });
+        let timeout = setTimeout(() => {
+            if (!silent) addSystemMessage("Timeout. Room may not exist.");
+            disconnectFromPeer(true);
+            window.isJoiningRoom = false;
+            if (!silent) document.getElementById("joinRoomBtn").disabled = false;
+            if (isReconnecting) {
+                // will retry
+            }
+        }, 15000);
+        peer.on('open', () => {
+            currentRoomId = roomCode;
+            document.getElementById("roomIdDisplay").value = roomCode;
+            const conn = peer.connect(roomCode, { reliable: true });
+            conn.on('open', () => {
+                clearTimeout(timeout);
+                setupConnection(conn);
+                window.isJoiningRoom = false;
+                if (!silent) document.getElementById("joinRoomBtn").disabled = false;
+                stopReconnect();
+                // Save role as joiner
+                saveRoomToStorage(roomCode, "joiner");
+            });
+            conn.on('error', () => {
+                clearTimeout(timeout);
+                disconnectFromPeer(true);
+                window.isJoiningRoom = false;
+                if (!silent) document.getElementById("joinRoomBtn").disabled = false;
+            });
+        });
+        peer.on('error', () => {
+            clearTimeout(timeout);
+            disconnectFromPeer(true);
+            window.isJoiningRoom = false;
+            if (!silent) document.getElementById("joinRoomBtn").disabled = false;
+        });
+        return true;
+    }
+    
+    function recreateRoom(roomCode) {
+        if (currentRoomId) {
+            addSystemMessage("Leave current room first.");
+            return false;
+        }
+        if (window.isCreatingRoom) return false;
+        window.isCreatingRoom = true;
+        document.getElementById("createRoomBtn").disabled = true;
+        if (peer) peer.destroy();
+        peer = new Peer(roomCode, { debug: 0 });
+        peer.on('open', () => {
+            currentRoomId = roomCode;
+            document.getElementById("roomIdDisplay").value = roomCode;
+            addSystemMessage(`✅ Room recreated! Code: ${roomCode}`);
+            window.isCreatingRoom = false;
+            document.getElementById("createRoomBtn").disabled = false;
+            saveRoomToStorage(roomCode, "creator");
+            // Wait for connections
+        });
+        peer.on('connection', conn => { if (!currentConnection) setupConnection(conn); });
+        peer.on('error', err => {
+            if (err.type === 'unavailable-id' && retryCount < 5) { retryCount++; recreateRoom(roomCode); }
+            else { addSystemMessage(`Error: ${err.message}`); window.isCreatingRoom = false; document.getElementById("createRoomBtn").disabled = false; }
+        });
+        return true;
+    }
+    
+    // --- Core connection functions (modified to save/clear)---
     function createRoom() {
         if (currentRoomId) { addSystemMessage("Leave current room first."); return; }
         if (window.isCreatingRoom) return;
         window.isCreatingRoom = true;
         document.getElementById("createRoomBtn").disabled = true;
-        const roomCode = generateRoomCode();
+        const roomCode = (() => {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            return code;
+        })();
         if (peer) peer.destroy();
         peer = new Peer(roomCode, { debug: 0 });
         peer.on('open', () => {
@@ -717,6 +840,7 @@
             addSystemMessage(`✅ Room created! Code: ${roomCode}`);
             window.isCreatingRoom = false;
             document.getElementById("createRoomBtn").disabled = false;
+            saveRoomToStorage(roomCode, "creator");
         });
         peer.on('connection', conn => { if (!currentConnection) setupConnection(conn); });
         peer.on('error', err => {
@@ -729,28 +853,15 @@
         let roomCode = document.getElementById("joinRoomId").value.trim().toUpperCase();
         if (!roomCode) { addSystemMessage("Enter a room code."); return; }
         if (currentRoomId) { addSystemMessage("Leave current room first."); return; }
-        if (window.isJoiningRoom) return;
-        window.isJoiningRoom = true;
-        document.getElementById("joinRoomBtn").disabled = true;
-        if (peer) peer.destroy();
-        peer = new Peer(undefined, { debug: 0 });
-        let timeout = setTimeout(() => { addSystemMessage("Timeout. Room may not exist."); disconnectFromPeer(); window.isJoiningRoom = false; document.getElementById("joinRoomBtn").disabled = false; }, 15000);
-        peer.on('open', () => {
-            currentRoomId = roomCode;
-            document.getElementById("roomIdDisplay").value = roomCode;
-            const conn = peer.connect(roomCode, { reliable: true });
-            conn.on('open', () => { clearTimeout(timeout); setupConnection(conn); window.isJoiningRoom = false; document.getElementById("joinRoomBtn").disabled = false; });
-            conn.on('error', () => { clearTimeout(timeout); disconnectFromPeer(); window.isJoiningRoom = false; document.getElementById("joinRoomBtn").disabled = false; });
-        });
-        peer.on('error', () => { clearTimeout(timeout); disconnectFromPeer(); window.isJoiningRoom = false; document.getElementById("joinRoomBtn").disabled = false; });
+        joinRoomWithCode(roomCode, false);
     }
     
-    function disconnectFromPeer() {
+    function disconnectFromPeer(keepSaved = false) {
         if (currentConnection) currentConnection.close();
         if (call) endCall();
         connected = false;
         currentConnection = null;
-        document.getElementById("connStatus").innerHTML = "⚫ Disconnected";
+        document.getElementById("connStatus").innerHTML = '<i class="fas fa-circle"></i> Disconnected';
         document.getElementById("callControls").style.display = "none";
         remoteProfile = { username: "Unknown", avatarURL: "", status: "⚫ Offline", customStatus: "" };
         updateRemoteUI();
@@ -759,17 +870,20 @@
         document.getElementById("roomIdDisplay").value = "";
         window.isCreatingRoom = false;
         window.isJoiningRoom = false;
+        if (!keepSaved) {
+            clearSavedRoom();
+            stopReconnect();
+        }
     }
     
     function setupConnection(conn) {
         if (currentConnection) { conn.close(); return; }
         currentConnection = conn;
         connected = true;
-        document.getElementById("connStatus").innerHTML = "🟢 Connected";
+        document.getElementById("connStatus").innerHTML = '<i class="fas fa-circle" style="color:#23a55a;"></i> Connected';
         document.getElementById("callControls").style.display = "flex";
         remoteProfile.peerId = conn.peer;
         sendProfileUpdate();
-        // Load chat history for this room
         const saved = localStorage.getItem(`chat_history_${currentRoomId}`);
         if (saved) {
             try { messages = JSON.parse(saved); nextMsgId = Math.max(...messages.map(m=>m.id),0)+1; renderMessages(); } catch(e) {}
@@ -834,8 +948,36 @@
                     break;
             }
         });
-        conn.on('close', () => disconnectFromPeer());
+        conn.on('close', () => {
+            disconnectFromPeer(true); // keep saved room for reconnection
+            if (savedRoom && savedRoom.role === "joiner") {
+                addSystemMessage(`Connection lost. Attempting to reconnect to ${savedRoom.roomCode}...`);
+                startReconnectAsJoiner(savedRoom.roomCode);
+            } else if (savedRoom && savedRoom.role === "creator") {
+                addSystemMessage(`Connection lost. You can recreate the room manually.`);
+            }
+        });
         conn.on('call', handleIncomingCall);
+    }
+    
+    // --- Auto-reconnect on page load ---
+    function attemptAutoReconnect() {
+        const stored = localStorage.getItem("lastRoom");
+        if (stored) {
+            try {
+                const { roomCode, role } = JSON.parse(stored);
+                if (roomCode && role) {
+                    savedRoom = { roomCode, role };
+                    if (role === "creator") {
+                        addSystemMessage(`🔄 Auto-recreating room ${roomCode}...`);
+                        recreateRoom(roomCode);
+                    } else if (role === "joiner") {
+                        addSystemMessage(`🔄 Auto-joining room ${roomCode}...`);
+                        startReconnectAsJoiner(roomCode);
+                    }
+                }
+            } catch(e) {}
+        }
     }
     
     // --- Initialization ---
@@ -844,7 +986,7 @@
         // Event listeners
         document.getElementById("createRoomBtn").onclick = createRoom;
         document.getElementById("joinRoomBtn").onclick = joinRoom;
-        document.getElementById("disconnectBtn").onclick = disconnectFromPeer;
+        document.getElementById("disconnectBtn").onclick = () => disconnectFromPeer(false);
         document.getElementById("sendMsgBtn").onclick = () => { const t = document.getElementById("messageInput").value.trim(); if(t) sendTextMessage(t); document.getElementById("messageInput").value = ""; };
         document.getElementById("messageInput").onkeypress = e => { if(e.key === "Enter") document.getElementById("sendMsgBtn").click(); else startTyping(); };
         document.getElementById("attachFileBtn").onclick = () => document.getElementById("fileInput").click();
@@ -869,7 +1011,7 @@
         const gifSearch = document.getElementById("gifSearch");
         document.getElementById("gifBtn").onclick = () => { gifSearch.style.display = gifSearch.style.display === "block" ? "none" : "block"; };
         document.getElementById("gifQuery").oninput = e => searchGif(e.target.value);
-        // Close modals on outside click
+        // Close modals
         document.addEventListener("click", (e) => {
             if (!e.target.closest("#emojiBtn") && !e.target.closest("#emojiPicker")) emojiPicker.style.display = "none";
             if (!e.target.closest("#gifBtn") && !e.target.closest("#gifSearch")) gifSearch.style.display = "none";
@@ -877,7 +1019,9 @@
             if (e.target === document.getElementById("profileModal")) document.getElementById("profileModal").style.display = "none";
             if (e.target === document.getElementById("editMessageModal")) document.getElementById("editMessageModal").style.display = "none";
         });
-        addSystemMessage("🎤 Ready! Create/join a room with a 6‑character code. Try formatting: **bold**, *italic*, `code`, ~~strikethrough~~, @mentions.");
+        addSystemMessage("🎤 Ready! Create/join a room with a 6‑character code. Auto‑reconnect is enabled.");
+        // Try auto-reconnect
+        attemptAutoReconnect();
     };
 </script>
 </body>
