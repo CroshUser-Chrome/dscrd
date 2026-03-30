@@ -22,8 +22,4 @@ Features Include:
 - Custom status
 - Notification sounds
 - Edit/Delete messages
-- Poll System
-- Bots
-- Animated avatars
-- Offline messages (stores messages and syncs when reconnected)
-- Custom Themes
+- Offline Resyncing (whenever you and your peer goes offline, when you come back online you both will reconnect automatically)
