@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* === same as before, no changes === */
 :root{
   --bg0:#1e1f22;--bg1:#232428;--bg2:#2b2d31;--bg3:#313338;--bg4:#383a40;
   --txt0:#f2f3f5;--txt1:#dbdee1;--txt2:#b5bac1;--txt3:#80848e;
@@ -217,11 +216,21 @@ body{font-family:var(--font);background:var(--bg3);color:var(--txt1);font-size:1
 .vsec{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ch);letter-spacing:.04em;margin-bottom:6px}
 .vbio{font-size:14px;color:var(--txt2);line-height:1.5}
 
-/* ROOM MODAL (new) */
-.room-modal{width:400px}
-.room-code{font-family:monospace;font-size:24px;font-weight:800;text-align:center;letter-spacing:2px;background:var(--bg0);padding:12px;border-radius:var(--r);margin:16px 0;color:var(--acc)}
-.room-input{width:100%;background:var(--bg0);border:1px solid #3c3f45;border-radius:var(--r);padding:12px;font-size:18px;font-family:monospace;text-align:center;letter-spacing:2px;color:var(--txt0);outline:none}
-.room-input:focus{border-color:var(--acc)}
+/* SIGNAL MODAL */
+.sig-modal{width:520px}
+.sig-tabs{display:flex;border-bottom:1px solid #3c3f45;margin-bottom:16px}
+.sig-tab{padding:8px 20px;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:14px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:var(--font);transition:.1s}
+.sig-tab.act{color:var(--acc);border-bottom-color:var(--acc)}
+.sig-step{font-size:13px;color:var(--txt3);margin-bottom:8px;line-height:1.5}
+.sig-step strong{color:var(--txt1)}
+.sig-box{width:100%;background:var(--bg0);border:1px solid #3c3f45;border-radius:var(--r);color:var(--txt1);font-family:monospace;font-size:11px;padding:10px;resize:none;outline:none;min-height:80px;line-height:1.5;word-break:break-all}
+.sig-box:focus{border-color:var(--acc)}
+.copy-btn{background:var(--bg4);border:none;color:var(--txt2);padding:6px 12px;border-radius:var(--r);font-size:13px;cursor:pointer;font-family:var(--font);transition:.1s;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover{background:#3c3f45;color:var(--txt0)}
+.sig-status{font-size:13px;padding:8px 12px;border-radius:var(--r);background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.3);color:#bdc3f3;display:flex;align-items:center;gap:8px}
+.sig-status.ok{background:rgba(35,165,90,.1);border-color:rgba(35,165,90,.3);color:var(--grn)}
+.sig-status.err{background:rgba(218,55,60,.1);border-color:rgba(218,55,60,.3);color:var(--red)}
+.sig-note{font-size:12px;color:var(--txt3);margin-top:8px;line-height:1.5}
 
 /* TOASTS */
 .toasts{position:fixed;bottom:80px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
@@ -242,7 +251,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--txt1);font-size:1
 <body>
 <div class="app">
 
-<!-- Guilds (unchanged) -->
+<!-- Guilds -->
 <div class="guilds">
   <div class="gw act">
     <div class="gpill"></div>
@@ -257,7 +266,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--txt1);font-size:1
   </div>
 </div>
 
-<!-- Sidebar (unchanged) -->
+<!-- Sidebar -->
 <div class="sidebar">
   <div class="srv-hdr"><span>DSCRD</span><i class="fas fa-chevron-down" style="font-size:13px"></i></div>
   <div class="ch-list">
@@ -305,7 +314,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--txt1);font-size:1
       <i class="fas fa-hashtag ch-ico"></i>
       <span class="ch-nm" id="chName">general</span>
       <div class="hdiv"></div>
-      <span class="ch-topic">Serverless P2P — powered by PeerJS</span>
+      <span class="ch-topic">Serverless P2P — pure WebRTC, no servers needed</span>
     </div>
     <div class="hdr-acts">
       <div class="conn-badge"><div class="cdot" id="cdot"></div><span id="cLabel">Disconnected</span></div>
@@ -315,16 +324,16 @@ body{font-family:var(--font);background:var(--bg3);color:var(--txt1);font-size:1
         <span class="rcode" id="rcode" title="Click to copy" onclick="copyCode()"></span>
         <i class="fas fa-copy" style="color:var(--txt3);font-size:11px;cursor:pointer" onclick="copyCode()"></i>
       </div>
-      <button class="hdrbtn" onclick="openRoomModal()" title="Room"><i class="fas fa-plug"></i></button>
+      <button class="hdrbtn" onclick="openSignalModal()" title="Connect / Signal"><i class="fas fa-plug"></i></button>
       <button class="hdrbtn" onclick="disconnectAll()" title="Disconnect"><i class="fas fa-sign-out-alt"></i></button>
     </div>
   </div>
 
   <div class="msgs" id="msgs">
     <div class="welcome">
-      <div class="welcome-icon"><i class="fas fa-door-open"></i></div>
-      <h2>Welcome to DSCRD</h2>
-      <p>Click the <strong style="color:var(--txt1)"><i class="fas fa-door-open"></i> room icon</strong> to create or join a room — no servers needed.</p>
+      <div class="welcome-icon"><i class="fas fa-hashtag"></i></div>
+      <h2>Welcome to #general</h2>
+      <p>Click the <strong style="color:var(--txt1)"><i class="fas fa-plug"></i> plug icon</strong> in the top right to connect with a peer — no servers needed.</p>
     </div>
   </div>
 
@@ -342,7 +351,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--txt1);font-size:1
   </div>
 </div>
 
-<!-- Members (unchanged) -->
+<!-- Members -->
 <div class="members">
   <div class="msec-hdr">Online — <span id="onlineCt">1</span></div>
   <div class="mitem" id="selfMitem" onclick="openViewProfile('me')">
@@ -358,7 +367,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--txt1);font-size:1
 
 </div><!-- .app -->
 
-<!-- Pickers (unchanged) -->
+<!-- Pickers -->
 <div class="picker emoji-picker" id="emojiPicker">
   <input class="esearch" id="esearch" placeholder="Search emoji…" oninput="filterEmoji(this.value)">
   <div class="egrid" id="egrid"></div>
@@ -372,33 +381,56 @@ body{font-family:var(--font);background:var(--bg3);color:var(--txt1);font-size:1
 <div class="toasts" id="toasts"></div>
 <div class="lb" id="lb" onclick="this.classList.remove('open')"><img id="lbImg" alt=""></div>
 
-<!-- ROOM MODAL (new) -->
-<div class="overlay" id="roomModal">
-  <div class="mcard room-modal">
+<!-- SIGNAL MODAL -->
+<div class="overlay" id="sigModal">
+  <div class="mcard sig-modal">
     <div class="mhdr">
-      <h2><i class="fas fa-door-open"></i> Room</h2>
-      <p>Create a new room or join an existing one.</p>
+      <h2><i class="fas fa-plug" style="color:var(--acc)"></i> Connect to Peer</h2>
+      <p>Pure WebRTC — no servers. Exchange signals manually (copy/paste via any messaging app).</p>
     </div>
     <div class="mbody">
-      <div style="display:flex;gap:12px;margin-bottom:24px">
-        <button class="mbtn pri" style="flex:1" onclick="createRoom()"><i class="fas fa-plus-circle"></i> Create Room</button>
-        <button class="mbtn sec" style="flex:1" onclick="document.getElementById('joinRoomInput').focus()"><i class="fas fa-sign-in-alt"></i> Join Room</button>
+      <div class="sig-tabs">
+        <button class="sig-tab act" id="hostTabBtn" onclick="switchSigTab('host')">Create Room (Host)</button>
+        <button class="sig-tab" id="joinTabBtn" onclick="switchSigTab('join')">Join Room (Guest)</button>
       </div>
-      <div id="createArea" style="display:none;margin-top:12px">
-        <div class="flbl">Your Room ID</div>
-        <div class="room-code" id="roomCodeDisplay"></div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="copy-btn" onclick="copyText('roomCodeDisplay')"><i class="fas fa-copy"></i> Copy ID</button>
+
+      <!-- HOST -->
+      <div id="hostTab">
+        <div id="hStep1">
+          <p class="sig-step"><strong>Step 1:</strong> Generate your offer and share it with your peer.</p>
+          <button class="mbtn pri" onclick="createOffer()"><i class="fas fa-magic"></i> Generate Offer</button>
+          <p class="sig-note">Send the offer to your friend via Discord DM, iMessage, email — anything works.</p>
         </div>
-        <p class="sig-note" style="margin-top:12px">Share this ID with your friend. They can join using it.</p>
+        <div id="hStep2" style="display:none">
+          <p class="sig-step"><strong>Step 2:</strong> Share this offer with your peer:</p>
+          <div style="display:flex;gap:8px;margin-bottom:6px">
+            <button class="copy-btn" onclick="copyText('offerOut')"><i class="fas fa-copy"></i> Copy Offer</button>
+          </div>
+          <textarea class="sig-box" id="offerOut" readonly rows="3"></textarea>
+          <p class="sig-step" style="margin-top:14px"><strong>Step 3:</strong> Paste their answer here once they send it back:</p>
+          <textarea class="sig-box" id="answerIn" placeholder="Paste the answer from your peer…" rows="3" oninput="checkAnswerReady()"></textarea>
+          <div id="answerStatus" style="margin-top:8px;display:none" class="sig-status"></div>
+          <button class="mbtn pri" id="connectAnswerBtn" style="margin-top:10px;display:none" onclick="connectWithAnswer()"><i class="fas fa-link"></i> Connect!</button>
+        </div>
       </div>
-      <div id="joinArea" style="display:none;margin-top:12px">
-        <div class="flbl">Enter Room ID</div>
-        <input class="room-input" id="joinRoomInput" placeholder="e.g., ABC123" maxlength="12" autocomplete="off">
-        <button class="mbtn pri" style="margin-top:12px;width:100%" onclick="joinRoom()"><i class="fas fa-link"></i> Join</button>
+
+      <!-- JOIN -->
+      <div id="joinTab" style="display:none">
+        <p class="sig-step"><strong>Step 1:</strong> Paste the offer from the host:</p>
+        <textarea class="sig-box" id="offerIn" placeholder="Paste the host's offer here…" rows="3" oninput="checkOfferReady()"></textarea>
+        <div id="offerStatus" style="margin-top:8px;display:none" class="sig-status"></div>
+        <button class="mbtn pri" id="genAnswerBtn" style="margin-top:10px;display:none" onclick="generateAnswer()"><i class="fas fa-reply"></i> Generate Answer</button>
+        <div id="jStep2" style="display:none;margin-top:16px">
+          <p class="sig-step"><strong>Step 2:</strong> Send this answer back to the host:</p>
+          <div style="display:flex;gap:8px;margin-bottom:6px">
+            <button class="copy-btn" onclick="copyText('answerOut')"><i class="fas fa-copy"></i> Copy Answer</button>
+          </div>
+          <textarea class="sig-box" id="answerOut" readonly rows="3"></textarea>
+          <div class="sig-status" style="margin-top:10px"><i class="fas fa-hourglass-half"></i> Waiting for host to enter your answer — connection will open automatically.</div>
+        </div>
       </div>
     </div>
-    <div class="mfoot"><button class="mbtn sec" onclick="closeModal('roomModal')">Close</button></div>
+    <div class="mfoot"><button class="mbtn sec" onclick="closeModal('sigModal')">Close</button></div>
   </div>
 </div>
 
@@ -459,94 +491,79 @@ body{font-family:var(--font);background:var(--bg3);color:var(--txt1);font-size:1
 
 <audio id="remAudio" autoplay style="display:none"></audio>
 
-<!-- PeerJS library -->
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-
 <script>
 'use strict';
 
 // ── STATE ──────────────────────────────────
-let peer = null;
-let conn = null;        // data connection
-let mediaCall = null;   // voice call
-let localStream = null;
-let connected = false;
-let isInVC = false;
-let isMuted = false;
-let isDeafened = false;
-let messages = [];
-let nextId = 1;
-let editTarget = null;
-let typingTimer = null;
-let lastTypeSent = 0;
-let gifTimer = null;
+let pc = null, dc = null, connected = false;
+let localStream = null, isInVC = false, isMuted = false, isDeafened = false;
+let messages = [], nextId = 1, editTarget = null;
+let typingTimer = null, lastTypeSent = 0, gifTimer = null;
 let lastMsgDate = null;
-let currentRoomId = null;
 
 const TENOR_KEY = 'AIzaSyAyimkuYQYF_FXVALexPzFsI5wRSAWtU9k';
 
-let me = { username: 'User' + (Math.random() * 8999 + 1000 | 0), bio: '', customStatus: '', bannerColor: '#5865f2', avatarURL: '' };
-let remote = { username: 'Peer', bio: '', customStatus: '', bannerColor: '#5865f2', avatarURL: '' };
+let me = { username:'User'+(Math.random()*8999+1000|0), bio:'', customStatus:'', bannerColor:'#5865f2', avatarURL:'' };
+let remote = { username:'Peer', bio:'', customStatus:'', bannerColor:'#5865f2', avatarURL:'' };
 
-// ── UTILS (unchanged) ──────────────────────
-const esc = s => String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-const fmtBytes = b => { if (!b) return '0 B'; const u = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(b) / Math.log(1024)); return (b / 1024 ** i).toFixed(1) + ' ' + u[i]; };
-const fmtTime = ts => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-const fmtDate = ts => { const d = new Date(ts), n = new Date(), df = (n - d) / 864e5; return df < 1 ? 'Today at ' + fmtTime(ts) : df < 2 ? 'Yesterday at ' + fmtTime(ts) : d.toLocaleDateString() + ' ' + fmtTime(ts); };
+const ICE_CFG = { iceServers:[
+  {urls:'stun:stun.l.google.com:19302'},
+  {urls:'stun:stun1.l.google.com:19302'}
+]};
 
-function showToast(msg, type = 'info', dur = 3000) {
+// ── UTILS ──────────────────────────────────
+const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmtBytes = b => { if(!b) return '0 B'; const u=['B','KB','MB','GB'],i=Math.floor(Math.log(b)/Math.log(1024)); return (b/1024**i).toFixed(1)+' '+u[i]; };
+const fmtTime = ts => new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+const fmtDate = ts => { const d=new Date(ts),n=new Date(),df=(n-d)/864e5; return df<1?'Today at '+fmtTime(ts):df<2?'Yesterday at '+fmtTime(ts):d.toLocaleDateString()+' '+fmtTime(ts); };
+
+function showToast(msg, type='info', dur=3000) {
   const c = document.getElementById('toasts');
   const el = document.createElement('div');
-  el.className = 'toast' + (type === 'ok' ? ' ok' : type === 'err' ? ' err' : type === 'warn' ? ' warn' : '');
-  const ic = { ok: 'fa-check-circle', err: 'fa-exclamation-circle', warn: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-  const cl = { ok: 'var(--grn)', err: 'var(--red)', warn: 'var(--ylw)', info: 'var(--acc)' };
-  el.innerHTML = `<i class="fas ${ic[type] || 'fa-info-circle'}" style="color:${cl[type] || cl.info}"></i><span>${esc(msg)}</span>`;
+  el.className = 'toast'+(type==='ok'?' ok':type==='err'?' err':type==='warn'?' warn':'');
+  const ic = {ok:'fa-check-circle',err:'fa-exclamation-circle',warn:'fa-exclamation-triangle',info:'fa-info-circle'};
+  const cl = {ok:'var(--grn)',err:'var(--red)',warn:'var(--ylw)',info:'var(--acc)'};
+  el.innerHTML = `<i class="fas ${ic[type]||'fa-info-circle'}" style="color:${cl[type]||cl.info}"></i><span>${esc(msg)}</span>`;
   c.appendChild(el);
-  setTimeout(() => { el.style.animation = 'sout .2s ease-in forwards'; setTimeout(() => el.remove(), 200); }, dur);
+  setTimeout(() => { el.style.animation='sout .2s ease-in forwards'; setTimeout(()=>el.remove(),200); }, dur);
 }
 
 function playSound(type) {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = new(window.AudioContext||window.webkitAudioContext)();
     const o = ctx.createOscillator(), g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination); o.type = 'sine';
-    o.frequency.value = type === 'mention' ? 660 : type === 'join' ? 550 : 880;
-    g.gain.value = .12; o.start();
-    g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime + .4);
-    o.stop(ctx.currentTime + .35); ctx.resume();
-  } catch (e) { }
+    o.connect(g); g.connect(ctx.destination); o.type='sine';
+    o.frequency.value = type==='mention'?660:type==='join'?550:880;
+    g.gain.value=.12; o.start();
+    g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.4);
+    o.stop(ctx.currentTime+.35); ctx.resume();
+  } catch(e){}
 }
 
 function copyText(id) {
-  let text;
-  if (typeof id === 'string' && document.getElementById(id)) {
-    text = document.getElementById(id).textContent || document.getElementById(id).value;
-  } else if (typeof id === 'string') {
-    text = id;
-  } else {
-    return;
-  }
-  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!', 'ok', 1500)).catch(() => {
-    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
-    showToast('Copied!', 'ok', 1500);
+  const v = document.getElementById(id).value;
+  navigator.clipboard.writeText(v).then(()=>showToast('Copied to clipboard!','ok',1500)).catch(()=>{
+    // Fallback
+    const el = document.getElementById(id); el.select(); document.execCommand('copy');
+    showToast('Copied!','ok',1500);
   });
 }
 
 function copyCode() {
   const v = document.getElementById('rcode').textContent;
-  navigator.clipboard.writeText(v).then(() => showToast('Room ID copied!', 'ok', 1500));
+  navigator.clipboard.writeText(v).then(()=>showToast('Code copied!','ok',1500));
 }
 
-// ── PROFILE (unchanged) ────────────────────
+// ── PROFILE ────────────────────────────────
 function loadProfile() {
-  try { const s = localStorage.getItem('dscrd_me2'); if (s) me = { ...me, ...JSON.parse(s) }; } catch (e) { }
+  try { const s=localStorage.getItem('dscrd_me2'); if(s) me={...me,...JSON.parse(s)}; } catch(e){}
   renderSelf();
 }
-function saveProfileData() { try { localStorage.setItem('dscrd_me2', JSON.stringify(me)); } catch (e) { } }
+function saveProfileData() { try { localStorage.setItem('dscrd_me2',JSON.stringify(me)); } catch(e){} }
 
 function setAvEl(el, p) {
-  if (p.avatarURL) { el.style.backgroundImage = `url('${p.avatarURL}')`; el.style.backgroundSize = 'cover'; el.style.backgroundColor = 'transparent'; el.innerHTML = ''; }
-  else { el.style.backgroundImage = ''; el.style.background = '#5865f2'; el.textContent = (p.username || '?').charAt(0).toUpperCase(); }
+  if(p.avatarURL) { el.style.backgroundImage=`url('${p.avatarURL}')`;el.style.backgroundSize='cover';el.style.backgroundColor='transparent';el.innerHTML=''; }
+  else { el.style.backgroundImage='';el.style.background='#5865f2';el.textContent=(p.username||'?').charAt(0).toUpperCase(); }
 }
 
 function renderSelf() {
@@ -567,9 +584,9 @@ function renderRemote() {
 
 function openProfileModal() {
   document.getElementById('eUname').value = me.username;
-  document.getElementById('eBio').value = me.bio || '';
-  document.getElementById('eSt').value = me.customStatus || '';
-  document.getElementById('pBanner').style.background = me.bannerColor || '#5865f2';
+  document.getElementById('eBio').value = me.bio||'';
+  document.getElementById('eSt').value = me.customStatus||'';
+  document.getElementById('pBanner').style.background = me.bannerColor||'#5865f2';
   setAvEl(document.getElementById('pAvEdit'), me);
   openModal('profileModal');
 }
@@ -577,34 +594,34 @@ function openProfileModal() {
 function setBanner(c, el) {
   me.bannerColor = c;
   document.getElementById('pBanner').style.background = c;
-  document.querySelectorAll('.sw').forEach(s => s.classList.remove('sel'));
-  if (el && el.classList) el.classList.add('sel');
+  document.querySelectorAll('.sw').forEach(s=>s.classList.remove('sel'));
+  if(el && el.classList) el.classList.add('sel');
 }
 
 function handleAvatar(e) {
-  const f = e.target.files[0]; if (!f) return;
-  if (!f.type.startsWith('image/')) { showToast('Select an image file', 'err'); return; }
-  if (f.size > 10 * 1024 * 1024) { showToast('Max 10MB', 'err'); return; }
+  const f = e.target.files[0]; if(!f) return;
+  if(!f.type.startsWith('image/')) { showToast('Select an image file','err'); return; }
+  if(f.size > 10*1024*1024) { showToast('Max 10MB','err'); return; }
   const r = new FileReader();
-  r.onload = ev => { me.avatarURL = ev.target.result; setAvEl(document.getElementById('pAvEdit'), me); renderSelf(); };
+  r.onload = ev => { me.avatarURL=ev.target.result; setAvEl(document.getElementById('pAvEdit'),me); renderSelf(); };
   r.readAsDataURL(f);
 }
 
 function saveProfile() {
   const n = document.getElementById('eUname').value.trim();
-  if (!n) { showToast('Name required', 'err'); return; }
-  me.username = n; me.bio = document.getElementById('eBio').value.trim(); me.customStatus = document.getElementById('eSt').value.trim();
-  saveProfileData(); renderSelf(); closeModal('profileModal'); showToast('Profile saved!', 'ok');
-  if (connected) send({ type: 'profile', ...me });
+  if(!n) { showToast('Name required','err'); return; }
+  me.username=n; me.bio=document.getElementById('eBio').value.trim(); me.customStatus=document.getElementById('eSt').value.trim();
+  saveProfileData(); renderSelf(); closeModal('profileModal'); showToast('Profile saved!','ok');
+  if(connected) send({type:'profile',...me});
 }
 
 function openViewProfile(who) {
-  const p = who === 'remote' ? remote : me;
-  document.getElementById('vBanner').style.background = p.bannerColor || 'linear-gradient(135deg,#5865f2,#7289da)';
+  const p = who==='remote' ? remote : me;
+  document.getElementById('vBanner').style.background = p.bannerColor||'linear-gradient(135deg,#5865f2,#7289da)';
   setAvEl(document.getElementById('vAv'), p);
   document.getElementById('vNm').textContent = p.username;
-  document.getElementById('vCSt').textContent = p.customStatus || '';
-  document.getElementById('vBio').textContent = p.bio || 'No bio set.';
+  document.getElementById('vCSt').textContent = p.customStatus||'';
+  document.getElementById('vBio').textContent = p.bio||'No bio set.';
   openModal('viewModal');
 }
 
@@ -612,277 +629,361 @@ function openViewProfile(who) {
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// ── ROOM LOGIC (new) ───────────────────────
-function openRoomModal() {
-  if (connected) { showToast('Already connected — disconnect first', 'warn'); return; }
-  // Reset UI
-  document.getElementById('createArea').style.display = 'none';
-  document.getElementById('joinArea').style.display = 'none';
-  document.getElementById('roomCodeDisplay').innerHTML = '';
-  document.getElementById('joinRoomInput').value = '';
-  openModal('roomModal');
-}
+// ── EMOJI ──────────────────────────────────
+const EMOJIS = ['😀','😂','😍','🥺','😎','🤔','😭','🥳','😅','😤','🤯','🫡','💀','🙏','👀','✨','🔥','💯','❤️','🎉','👍','👎','💪','🤝','🫂','🍕','🎮','🎶','⭐','🚀','🌊','🌙','☀️','🌈','💎','🏆','🎯','🎲','🦋','🐱','🐶','🐸','🦊','🦁'];
 
-function createRoom() {
-  // Generate a random 6-character room ID (alphanumeric uppercase)
-  const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-  currentRoomId = roomId;
-  // Initialize peer with this ID
-  if (peer) peer.destroy();
-  peer = new Peer(roomId, {
-    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
-  });
-  peer.on('open', id => {
-    showToast(`Room created: ${id}`, 'ok');
-    document.getElementById('roomCodeDisplay').innerHTML = id;
-    document.getElementById('createArea').style.display = 'block';
-    document.getElementById('joinArea').style.display = 'none';
-    // Wait for connection
-    peer.on('connection', incomingConn => {
-      conn = incomingConn;
-      setupDataConnection(conn);
-      // Auto-answer voice call if any
-      peer.on('call', call => {
-        if (localStream && isInVC) {
-          mediaCall = call;
-          call.answer(localStream);
-          call.on('stream', remoteStream => {
-            const audio = document.getElementById('remAudio');
-            audio.srcObject = remoteStream;
-            audio.play();
-          });
-        } else {
-          // If not in voice, reject call
-          call.close();
-        }
-      });
+function initEmoji() {
+  const g = document.getElementById('egrid');
+  EMOJIS.forEach(e => { const s=document.createElement('span'); s.textContent=e; s.onclick=()=>insertEmoji(e); g.appendChild(s); });
+}
+function insertEmoji(e) { const i=document.getElementById('mInput'); i.value+=e; i.focus(); hideEmoji(); }
+function hideEmoji() { document.getElementById('emojiPicker').style.display='none'; }
+function toggleEmoji(btn) {
+  const p = document.getElementById('emojiPicker');
+  if(p.style.display==='block') { hideEmoji(); return; }
+  const r = btn.getBoundingClientRect();
+  p.style.display='block';
+  p.style.bottom = (window.innerHeight-r.top+8)+'px';
+  p.style.left = Math.min(r.left, window.innerWidth-310)+'px';
+  document.getElementById('esearch').value=''; filterEmoji('');
+}
+function filterEmoji(q) { document.getElementById('egrid').querySelectorAll('span').forEach(s=>{ s.style.display=!q||s.textContent.includes(q)?'':'none'; }); }
+
+// ── GIF (TENOR) ────────────────────────────
+function toggleGif(btn) {
+  const p = document.getElementById('gifPicker');
+  if(p.style.display==='block') { p.style.display='none'; return; }
+  const r = btn.getBoundingClientRect();
+  p.style.display='block';
+  p.style.bottom = (window.innerHeight-r.top+8)+'px';
+  p.style.left = Math.max(0,Math.min(r.left-80,window.innerWidth-330))+'px';
+}
+function debGif(q) { clearTimeout(gifTimer); if(!q) return; gifTimer=setTimeout(()=>searchGif(q),450); }
+async function searchGif(q) {
+  const r = document.getElementById('gresults');
+  r.innerHTML = '<div style="color:var(--txt3);font-size:13px;text-align:center;padding:20px;grid-column:span 2"><i class="fas fa-spinner fa-spin"></i> Searching…</div>';
+  try {
+    const res = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${TENOR_KEY}&limit=12&media_filter=gif,tinygif`);
+    if(!res.ok) throw new Error('Tenor error '+res.status);
+    const data = await res.json();
+    r.innerHTML = '';
+    if(!data.results?.length) { r.innerHTML='<div style="color:var(--txt3);font-size:13px;text-align:center;padding:20px;grid-column:span 2">No results found</div>'; return; }
+    data.results.forEach(g => {
+      const preview = g.media_formats?.tinygif?.url || g.media_formats?.gif?.url;
+      const full = g.media_formats?.gif?.url || preview;
+      if(!preview) return;
+      const img = document.createElement('img'); img.src=preview; img.loading='lazy';
+      img.onclick = () => { sendGif(full); document.getElementById('gifPicker').style.display='none'; };
+      r.appendChild(img);
     });
-  });
-  peer.on('error', err => {
-    console.error(err);
-    showToast('Room creation failed: ' + err.message, 'err');
-    if (peer) peer.destroy();
-    closeModal('roomModal');
+  } catch(e) {
+    r.innerHTML = '<div style="color:var(--red);font-size:13px;text-align:center;padding:20px;grid-column:span 2">Failed to load GIFs</div>';
+  }
+}
+
+// ── WEBRTC SIGNALING ───────────────────────
+function switchSigTab(tab) {
+  document.getElementById('hostTabBtn').classList.toggle('act', tab==='host');
+  document.getElementById('joinTabBtn').classList.toggle('act', tab==='join');
+  document.getElementById('hostTab').style.display = tab==='host'?'':'none';
+  document.getElementById('joinTab').style.display = tab==='join'?'':'none';
+}
+
+function openSignalModal() {
+  if(connected) { showToast('Already connected — disconnect first','warn'); return; }
+  resetSigUI();
+  openModal('sigModal');
+}
+
+function resetSigUI() {
+  document.getElementById('hStep1').style.display='';
+  document.getElementById('hStep2').style.display='none';
+  document.getElementById('offerOut').value='';
+  document.getElementById('answerIn').value='';
+  document.getElementById('answerStatus').style.display='none';
+  document.getElementById('connectAnswerBtn').style.display='none';
+  document.getElementById('offerIn').value='';
+  document.getElementById('offerStatus').style.display='none';
+  document.getElementById('genAnswerBtn').style.display='none';
+  document.getElementById('jStep2').style.display='none';
+  document.getElementById('answerOut').value='';
+  switchSigTab('host');
+}
+
+function makePeerConnection() {
+  if(pc) { try{pc.close();}catch(e){} pc=null; }
+  pc = new RTCPeerConnection(ICE_CFG);
+  pc.onconnectionstatechange = () => {
+    const s = pc.connectionState;
+    if(s==='connected') onPeerConnected();
+    else if(s==='disconnected'||s==='failed'||s==='closed') onPeerDisconnected();
+  };
+  pc.ontrack = e => {
+    const audio = document.getElementById('remAudio');
+    audio.srcObject = e.streams[0];
+  };
+  return pc;
+}
+
+function waitGathering(myPc) {
+  return new Promise(res => {
+    if(myPc.iceGatheringState === 'complete') { res(); return; }
+    const check = () => { if(myPc.iceGatheringState==='complete') { myPc.removeEventListener('icegatheringstatechange',check); res(); } };
+    myPc.addEventListener('icegatheringstatechange', check);
+    setTimeout(res, 6000); // timeout fallback
   });
 }
 
-function joinRoom() {
-  const roomId = document.getElementById('joinRoomInput').value.trim().toUpperCase();
-  if (!roomId) { showToast('Enter a room ID', 'warn'); return; }
-  currentRoomId = roomId;
-  if (peer) peer.destroy();
-  // Create a random ID for this peer
-  const myId = Math.random().toString(36).substring(2, 8).toUpperCase();
-  peer = new Peer(myId, {
-    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
-  });
-  peer.on('open', () => {
-    showToast('Joining room...', 'info');
-    // Connect to the host
-    conn = peer.connect(roomId);
-    setupDataConnection(conn);
-    // Handle incoming call (if host calls)
-    peer.on('call', call => {
-      if (localStream && isInVC) {
-        mediaCall = call;
-        call.answer(localStream);
-        call.on('stream', remoteStream => {
-          const audio = document.getElementById('remAudio');
-          audio.srcObject = remoteStream;
-          audio.play();
-        });
-      } else {
-        call.close();
-      }
-    });
-  });
-  peer.on('error', err => {
-    console.error(err);
-    showToast('Join failed: ' + err.message, 'err');
-    if (peer) peer.destroy();
-    closeModal('roomModal');
-  });
+function encodeSignal(sdp, type) { return btoa(JSON.stringify({sdp,type})); }
+function decodeSignal(b64) { return JSON.parse(atob(b64.trim())); }
+
+// HOST: create offer
+async function createOffer() {
+  makePeerConnection();
+  dc = pc.createDataChannel('chat', {ordered:true});
+  setupDC();
+  try {
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await waitGathering(pc);
+    document.getElementById('offerOut').value = encodeSignal(pc.localDescription.sdp, pc.localDescription.type);
+    document.getElementById('hStep1').style.display='none';
+    document.getElementById('hStep2').style.display='';
+  } catch(e) { showToast('Error: '+e.message,'err'); }
 }
 
-function setupDataConnection(dc) {
-  dc.on('open', () => {
-    connected = true;
-    setConnUI('on', 'Connected');
-    closeModal('roomModal');
-    addSys('🟢 Peer connected!');
-    showToast('Connected!', 'ok');
-    playSound('join');
-    document.getElementById('remMitem').style.display = 'flex';
-    document.getElementById('onlineCt').textContent = '2';
-    document.getElementById('offlineCt').textContent = '0';
-    document.getElementById('vcJoinIco').style.display = '';
-    document.getElementById('roomPill').style.display = 'flex';
-    document.getElementById('rcode').textContent = currentRoomId;
-    loadHistory();
-    setTimeout(() => send({ type: 'profile', ...me }), 200);
-  });
-  dc.on('close', () => {
-    onPeerDisconnected();
-  });
-  dc.on('error', e => console.warn('Data channel error', e));
-  dc.on('data', data => {
-    try { handleMsg(JSON.parse(data)); } catch (err) { console.warn('Bad msg', err); }
-  });
+function checkAnswerReady() {
+  const v = document.getElementById('answerIn').value.trim();
+  document.getElementById('connectAnswerBtn').style.display = v ? '' : 'none';
 }
 
-function onPeerDisconnected() {
-  if (!connected) return;
-  connected = false;
-  setConnUI('off', 'Disconnected');
-  addSys('🔴 Peer disconnected');
-  showToast('Peer disconnected', 'warn');
-  document.getElementById('remMitem').style.display = 'none';
-  document.getElementById('onlineCt').textContent = '1';
-  document.getElementById('offlineCt').textContent = '1';
-  document.getElementById('vcJoinIco').style.display = 'none';
-  document.getElementById('roomPill').style.display = 'none';
-  remote = { username: 'Peer', bio: '', customStatus: '', bannerColor: '#5865f2', avatarURL: '' };
-  if (isInVC) leaveVC();
-  if (conn) { try { conn.close(); } catch (e) { } conn = null; }
-  if (peer) { try { peer.destroy(); } catch (e) { } peer = null; }
-  currentRoomId = null;
+async function connectWithAnswer() {
+  const raw = document.getElementById('answerIn').value.trim();
+  const st = document.getElementById('answerStatus');
+  st.style.display='flex'; st.className='sig-status';
+  st.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing answer…';
+  try {
+    const { sdp, type } = decodeSignal(raw);
+    await pc.setRemoteDescription(new RTCSessionDescription({sdp,type}));
+    st.className='sig-status ok';
+    st.innerHTML='<i class="fas fa-check-circle"></i> Answer applied — connecting now…';
+    document.getElementById('connectAnswerBtn').style.display='none';
+  } catch(e) {
+    st.className='sig-status err';
+    st.innerHTML='<i class="fas fa-exclamation-circle"></i> Invalid answer. Make sure you pasted the full text.';
+  }
 }
 
-function disconnectAll() {
-  if (conn) { try { conn.close(); } catch (e) { } conn = null; }
-  if (peer) { try { peer.destroy(); } catch (e) { } peer = null; }
-  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  onPeerDisconnected();
-  showToast('Disconnected', 'info');
+function checkOfferReady() {
+  const v = document.getElementById('offerIn').value.trim();
+  const st = document.getElementById('offerStatus');
+  if(!v) { st.style.display='none'; document.getElementById('genAnswerBtn').style.display='none'; return; }
+  try {
+    decodeSignal(v);
+    st.style.display='flex'; st.className='sig-status ok';
+    st.innerHTML='<i class="fas fa-check-circle"></i> Valid offer detected.';
+    document.getElementById('genAnswerBtn').style.display='';
+  } catch(e) {
+    st.style.display='flex'; st.className='sig-status err';
+    st.innerHTML='<i class="fas fa-exclamation-circle"></i> Invalid offer — make sure you copied the full text.';
+    document.getElementById('genAnswerBtn').style.display='none';
+  }
 }
 
-function setConnUI(state, label) {
-  document.getElementById('cdot').className = 'cdot' + (state === 'on' ? ' on' : state === 'blink' ? ' blink' : '');
-  document.getElementById('cLabel').textContent = label;
+// GUEST: generate answer
+async function generateAnswer() {
+  makePeerConnection();
+  pc.ondatachannel = e => { dc=e.channel; setupDC(); };
+  const raw = document.getElementById('offerIn').value.trim();
+  try {
+    const { sdp, type } = decodeSignal(raw);
+    await pc.setRemoteDescription(new RTCSessionDescription({sdp,type}));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    await waitGathering(pc);
+    document.getElementById('answerOut').value = encodeSignal(pc.localDescription.sdp, pc.localDescription.type);
+    document.getElementById('jStep2').style.display='';
+  } catch(e) { showToast('Error: '+e.message,'err'); }
+}
+
+// ── DATA CHANNEL ───────────────────────────
+function setupDC() {
+  dc.onopen = () => onPeerConnected();
+  dc.onclose = () => onPeerDisconnected();
+  dc.onerror = e => console.warn('DC error',e);
+  dc.onmessage = e => { try { handleMsg(JSON.parse(e.data)); } catch(err){ console.warn('Bad msg',err); } };
 }
 
 function send(data) {
-  if (conn && conn.open) {
-    try { conn.send(JSON.stringify(data)); return true; } catch (e) { }
-  }
+  if(dc && dc.readyState==='open') { try { dc.send(JSON.stringify(data)); return true; } catch(e){} }
   return false;
 }
 
-// ── INCOMING MESSAGES (unchanged) ──────────
+// ── CONNECTION EVENTS ──────────────────────
+function onPeerConnected() {
+  if(connected) return;
+  connected = true;
+  setConnUI('on','Connected');
+  closeModal('sigModal');
+  addSys('🟢 Peer connected!');
+  showToast('Connected!','ok');
+  playSound('join');
+  document.getElementById('remMitem').style.display='flex';
+  document.getElementById('onlineCt').textContent='2';
+  document.getElementById('offlineCt').textContent='0';
+  document.getElementById('vcJoinIco').style.display='';
+  const code = Math.random().toString(36).slice(2,8).toUpperCase();
+  document.getElementById('rcode').textContent=code;
+  document.getElementById('roomPill').style.display='flex';
+  loadHistory();
+  setTimeout(()=>send({type:'profile',...me}), 200);
+}
+
+function onPeerDisconnected() {
+  if(!connected) return;
+  connected=false;
+  setConnUI('off','Disconnected');
+  addSys('🔴 Peer disconnected');
+  showToast('Peer disconnected','warn');
+  document.getElementById('remMitem').style.display='none';
+  document.getElementById('onlineCt').textContent='1';
+  document.getElementById('offlineCt').textContent='1';
+  document.getElementById('vcJoinIco').style.display='none';
+  document.getElementById('roomPill').style.display='none';
+  remote = {username:'Peer',bio:'',customStatus:'',bannerColor:'#5865f2',avatarURL:''};
+  if(isInVC) leaveVC();
+}
+
+function disconnectAll() {
+  if(dc) { try{dc.close();}catch(e){} dc=null; }
+  if(pc) { try{pc.close();}catch(e){} pc=null; }
+  if(localStream) { localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
+  onPeerDisconnected();
+  showToast('Disconnected','info');
+}
+
+function setConnUI(state, label) {
+  document.getElementById('cdot').className='cdot'+(state==='on'?' on':state==='blink'?' blink':'');
+  document.getElementById('cLabel').textContent=label;
+}
+
+// ── INCOMING MESSAGES ──────────────────────
 function handleMsg(msg) {
-  switch (msg.type) {
+  switch(msg.type) {
     case 'profile':
-      remote.username = msg.username || 'Peer';
-      remote.bio = msg.bio || '';
-      remote.customStatus = msg.customStatus || '';
-      remote.bannerColor = msg.bannerColor || '#5865f2';
-      remote.avatarURL = msg.avatarURL || '';
+      remote.username = msg.username||'Peer';
+      remote.bio = msg.bio||'';
+      remote.customStatus = msg.customStatus||'';
+      remote.bannerColor = msg.bannerColor||'#5865f2';
+      remote.avatarURL = msg.avatarURL||'';
       renderRemote();
       break;
     case 'chat': {
       const { sub, msgId, content, gifUrl, fileName, fileSize, fileDataURL, fileType, timestamp } = msg;
       let m;
-      if (sub === 'text') m = { id: msgId, type: 'text', content, from: 'remote', timestamp, reactions: {}, edited: false };
-      else if (sub === 'gif') m = { id: msgId, type: 'gif', gifUrl, from: 'remote', timestamp, reactions: {}, edited: false };
-      else if (sub === 'file') m = { id: msgId, type: 'file', fileName, fileSize, fileDataURL, fileType, from: 'remote', timestamp, reactions: {}, edited: false };
-      if (m) { messages.push(m); appendMsgEl(m); scrollBottom(); saveHistory(); }
-      if (sub === 'text' && content.includes('@' + me.username)) playSound('mention'); else playSound('msg');
+      if(sub==='text') m={id:msgId,type:'text',content,from:'remote',timestamp,reactions:{},edited:false};
+      else if(sub==='gif') m={id:msgId,type:'gif',gifUrl,from:'remote',timestamp,reactions:{},edited:false};
+      else if(sub==='file') m={id:msgId,type:'file',fileName,fileSize,fileDataURL,fileType,from:'remote',timestamp,reactions:{},edited:false};
+      if(m) { messages.push(m); appendMsgEl(m); scrollBottom(); saveHistory(); }
+      if(sub==='text'&&content.includes('@'+me.username)) playSound('mention'); else playSound('msg');
       break;
     }
     case 'reaction': {
-      const rm = messages.find(m => m.id === msg.msgId);
-      if (rm) { if (!rm.reactions[msg.emoji]) rm.reactions[msg.emoji] = []; const i = rm.reactions[msg.emoji].indexOf(msg.user); if (msg.add && i === -1) rm.reactions[msg.emoji].push(msg.user); else if (!msg.add && i !== -1) rm.reactions[msg.emoji].splice(i, 1); if (!rm.reactions[msg.emoji].length) delete rm.reactions[msg.emoji]; updateRxns(msg.msgId); }
+      const rm = messages.find(m=>m.id===msg.msgId);
+      if(rm) { if(!rm.reactions[msg.emoji])rm.reactions[msg.emoji]=[]; const i=rm.reactions[msg.emoji].indexOf(msg.user); if(msg.add&&i===-1)rm.reactions[msg.emoji].push(msg.user); else if(!msg.add&&i!==-1)rm.reactions[msg.emoji].splice(i,1); if(!rm.reactions[msg.emoji].length)delete rm.reactions[msg.emoji]; updateRxns(msg.msgId); }
       break;
     }
     case 'edit': {
-      const em = messages.find(m => m.id === msg.msgId);
-      if (em) { em.content = msg.newContent; em.edited = true; const el = document.querySelector(`.msg[data-id="${msg.msgId}"] .mtext`); if (el) el.innerHTML = fmtText(em.content) + '<span class="medit">(edited)</span>'; }
+      const em = messages.find(m=>m.id===msg.msgId);
+      if(em) { em.content=msg.newContent; em.edited=true; const el=document.querySelector(`.msg[data-id="${msg.msgId}"] .mtext`); if(el)el.innerHTML=fmtText(em.content)+'<span class="medit">(edited)</span>'; }
       break;
     }
     case 'delete': {
-      const di = messages.findIndex(m => m.id === msg.msgId);
-      if (di !== -1) { messages.splice(di, 1); rebuildMsgs(); }
+      const di = messages.findIndex(m=>m.id===msg.msgId);
+      if(di!==-1) { messages.splice(di,1); rebuildMsgs(); }
       break;
     }
     case 'typing': {
       const tb = document.getElementById('typingBar');
-      tb.innerHTML = `<div class="tdots"><span></span><span></span><span></span></div><span>${esc(remote.username)} is typing…</span>`;
-      clearTimeout(typingTimer); typingTimer = setTimeout(() => tb.innerHTML = '', 3000);
+      tb.innerHTML=`<div class="tdots"><span></span><span></span><span></span></div><span>${esc(remote.username)} is typing…</span>`;
+      clearTimeout(typingTimer); typingTimer=setTimeout(()=>tb.innerHTML='',3000);
       break;
     }
   }
 }
 
-// ── SENDING (unchanged) ────────────────────
+// ── SENDING ────────────────────────────────
 function sendText() {
   const inp = document.getElementById('mInput');
-  const text = inp.value.trim(); if (!text) return;
-  if (!connected) { showToast('Not connected — use the room icon to connect', 'warn'); return; }
-  inp.value = ''; autoResize(inp);
-  const id = nextId++, ts = Date.now();
-  const m = { id, type: 'text', content: text, from: 'me', timestamp: ts, reactions: {}, edited: false };
+  const text = inp.value.trim(); if(!text) return;
+  if(!connected) { showToast('Not connected — use the plug icon to connect','warn'); return; }
+  inp.value=''; autoResize(inp);
+  const id=nextId++, ts=Date.now();
+  const m={id,type:'text',content:text,from:'me',timestamp:ts,reactions:{},edited:false};
   messages.push(m); appendMsgEl(m); scrollBottom(); saveHistory();
-  send({ type: 'chat', sub: 'text', msgId: id, content: text, timestamp: ts });
+  send({type:'chat',sub:'text',msgId:id,content:text,timestamp:ts});
 }
 
 function sendGif(url) {
-  if (!connected) { showToast('Not connected', 'warn'); return; }
-  const id = nextId++, ts = Date.now();
-  const m = { id, type: 'gif', gifUrl: url, from: 'me', timestamp: ts, reactions: {}, edited: false };
+  if(!connected) { showToast('Not connected','warn'); return; }
+  const id=nextId++, ts=Date.now();
+  const m={id,type:'gif',gifUrl:url,from:'me',timestamp:ts,reactions:{},edited:false};
   messages.push(m); appendMsgEl(m); scrollBottom(); saveHistory();
-  send({ type: 'chat', sub: 'gif', msgId: id, gifUrl: url, timestamp: ts });
+  send({type:'chat',sub:'gif',msgId:id,gifUrl:url,timestamp:ts});
 }
 
 function sendFile(file) {
-  if (!connected) { showToast('Not connected', 'warn'); return; }
-  if (file.size > 25 * 1024 * 1024) { showToast('Max 25MB per file', 'err'); return; }
-  showToast('Sending file…', 'info', 2000);
-  const r = new FileReader();
-  r.onload = e => {
-    const id = nextId++, ts = Date.now();
-    const m = { id, type: 'file', fileName: file.name, fileSize: file.size, fileDataURL: e.target.result, fileType: file.type, from: 'me', timestamp: ts, reactions: {}, edited: false };
+  if(!connected) { showToast('Not connected','warn'); return; }
+  if(file.size>25*1024*1024) { showToast('Max 25MB per file','err'); return; }
+  showToast('Sending file…','info',2000);
+  const r=new FileReader();
+  r.onload=e=>{
+    const id=nextId++, ts=Date.now();
+    const m={id,type:'file',fileName:file.name,fileSize:file.size,fileDataURL:e.target.result,fileType:file.type,from:'me',timestamp:ts,reactions:{},edited:false};
     messages.push(m); appendMsgEl(m); scrollBottom(); saveHistory();
-    send({ type: 'chat', sub: 'file', msgId: id, fileName: file.name, fileSize: file.size, fileDataURL: e.target.result, fileType: file.type, timestamp: ts });
+    send({type:'chat',sub:'file',msgId:id,fileName:file.name,fileSize:file.size,fileDataURL:e.target.result,fileType:file.type,timestamp:ts});
   };
   r.readAsDataURL(file);
 }
 
 function onTyping() {
-  if (!connected) return;
-  const now = Date.now();
-  if (now - lastTypeSent > 2000) { send({ type: 'typing' }); lastTypeSent = now; }
+  if(!connected) return;
+  const now=Date.now();
+  if(now-lastTypeSent>2000) { send({type:'typing'}); lastTypeSent=now; }
 }
 
-// ── RENDER (unchanged) ─────────────────────
+// ── RENDER ─────────────────────────────────
 function addSys(text) {
-  const m = { id: nextId++, type: 'system', content: text, from: 'system', timestamp: Date.now() };
+  const m={id:nextId++,type:'system',content:text,from:'system',timestamp:Date.now()};
   messages.push(m); appendMsgEl(m); scrollBottom();
 }
 
 function rebuildMsgs() {
   const c = document.getElementById('msgs');
-  c.innerHTML = '<div class="welcome"><div class="welcome-icon"><i class="fas fa-door-open"></i></div><h2>Welcome to DSCRD</h2><p>Click the <strong style="color:var(--txt1)"><i class="fas fa-door-open"></i> room icon</strong> to create or join a room.</p></div>';
-  lastMsgDate = null;
-  messages.forEach(m => appendMsgEl(m));
+  c.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="fas fa-hashtag"></i></div><h2>Welcome to #general</h2><p>Click the <strong style="color:var(--txt1)"><i class="fas fa-plug"></i> plug icon</strong> to connect.</p></div>';
+  lastMsgDate=null;
+  messages.forEach(m=>appendMsgEl(m));
   scrollBottom();
 }
 
 function appendMsgEl(msg) {
   const c = document.getElementById('msgs');
-  if (msg.type === 'system') {
-    const d = document.createElement('div'); d.className = 'sysmsg'; d.dataset.id = msg.id;
-    d.innerHTML = `<i class="fas fa-info-circle"></i><span>${esc(msg.content)}</span>`;
+  if(msg.type==='system') {
+    const d=document.createElement('div'); d.className='sysmsg'; d.dataset.id=msg.id;
+    d.innerHTML=`<i class="fas fa-info-circle"></i><span>${esc(msg.content)}</span>`;
     c.appendChild(d); return;
   }
+  // Date divider
   const md = new Date(msg.timestamp).toDateString();
-  if (md !== lastMsgDate) {
-    const div = document.createElement('div'); div.className = 'divider';
-    div.innerHTML = `<span>${new Date(msg.timestamp).toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>`;
-    c.appendChild(div); lastMsgDate = md;
+  if(md!==lastMsgDate) {
+    const div=document.createElement('div'); div.className='divider';
+    div.innerHTML=`<span>${new Date(msg.timestamp).toLocaleDateString([],{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</span>`;
+    c.appendChild(div); lastMsgDate=md;
   }
-  const prev = messages[messages.indexOf(msg) - 1];
-  const compact = prev && prev.from === msg.from && msg.timestamp - prev.timestamp < 5 * 60000 && prev.type !== 'system';
-  const isMe = msg.from === 'me';
+  // Compact (group messages within 5 min from same sender)
+  const prev = messages[messages.indexOf(msg)-1];
+  const compact = prev && prev.from===msg.from && msg.timestamp-prev.timestamp < 5*60000 && prev.type!=='system';
+  const isMe = msg.from==='me';
   const p = isMe ? me : remote;
 
   const avStyle = p.avatarURL
@@ -891,31 +992,33 @@ function appendMsgEl(msg) {
   const avInner = p.avatarURL ? '' : esc(p.username.charAt(0).toUpperCase());
 
   const el = document.createElement('div');
-  el.className = 'msg' + (compact ? ' compact' : ''); el.dataset.id = msg.id;
+  el.className = 'msg'+(compact?' compact':''); el.dataset.id=msg.id;
 
+  // Body
   let body = '';
-  if (msg.type === 'text') body = `<div class="mtext">${fmtText(msg.content)}${msg.edited ? '<span class="medit">(edited)</span>' : ''}</div>`;
-  else if (msg.type === 'gif') body = `<div class="mprev"><img src="${esc(msg.gifUrl)}" alt="GIF" onclick="openLB(this.src)"></div>`;
-  else if (msg.type === 'file') {
-    if (msg.fileType?.startsWith('image/')) body = `<div class="mprev"><img src="${msg.fileDataURL}" alt="${esc(msg.fileName)}" onclick="openLB(this.src)"></div>`;
-    else if (msg.fileType?.startsWith('audio/')) body = `<div class="mprev"><audio controls src="${msg.fileDataURL}"></audio></div>`;
-    else if (msg.fileType?.startsWith('video/')) body = `<div class="mprev"><video controls src="${msg.fileDataURL}"></video></div>`;
-    else body = `<div class="fattach" onclick="dlFile('${msg.fileDataURL}','${esc(msg.fileName)}')"><div class="fico"><i class="fas fa-file"></i></div><div><div class="fnm">${esc(msg.fileName)}</div><div class="fsz">${fmtBytes(msg.fileSize)}</div></div><i class="fas fa-download" style="color:var(--txt3);margin-left:auto"></i></div>`;
+  if(msg.type==='text') body=`<div class="mtext">${fmtText(msg.content)}${msg.edited?'<span class="medit">(edited)</span>':''}</div>`;
+  else if(msg.type==='gif') body=`<div class="mprev"><img src="${esc(msg.gifUrl)}" alt="GIF" onclick="openLB(this.src)"></div>`;
+  else if(msg.type==='file') {
+    if(msg.fileType?.startsWith('image/')) body=`<div class="mprev"><img src="${msg.fileDataURL}" alt="${esc(msg.fileName)}" onclick="openLB(this.src)"></div>`;
+    else if(msg.fileType?.startsWith('audio/')) body=`<div class="mprev"><audio controls src="${msg.fileDataURL}"></audio></div>`;
+    else if(msg.fileType?.startsWith('video/')) body=`<div class="mprev"><video controls src="${msg.fileDataURL}"></video></div>`;
+    else body=`<div class="fattach" onclick="dlFile('${msg.fileDataURL}','${esc(msg.fileName)}')"><div class="fico"><i class="fas fa-file"></i></div><div><div class="fnm">${esc(msg.fileName)}</div><div class="fsz">${fmtBytes(msg.fileSize)}</div></div><i class="fas fa-download" style="color:var(--txt3);margin-left:auto"></i></div>`;
   }
 
+  // Actions
   const acts = isMe
     ? `<div class="macts"><button class="mabtn" title="React" onclick="showRxnPicker(${msg.id},this)"><i class="fas fa-smile-beam"></i></button><button class="mabtn" title="Edit" onclick="openEdit(${msg.id})"><i class="fas fa-edit"></i></button><button class="mabtn danger" title="Delete" onclick="delMsg(${msg.id})"><i class="fas fa-trash-alt"></i></button></div>`
     : `<div class="macts"><button class="mabtn" title="React" onclick="showRxnPicker(${msg.id},this)"><i class="fas fa-smile-beam"></i></button></div>`;
 
-  el.innerHTML = `
+  el.innerHTML=`
     <div class="av-col">
-      <div class="mav" onclick="openViewProfile('${isMe ? 'me' : 'remote'}')" style="${avStyle}">${avInner}</div>
+      <div class="mav" onclick="openViewProfile('${isMe?'me':'remote'}')" style="${avStyle}">${avInner}</div>
     </div>
     <div class="mcont">
       ${compact
-      ? `<span class="ts-side">${fmtTime(msg.timestamp)}</span>`
-      : `<div class="mhdr"><span class="muser" onclick="openViewProfile('${isMe ? 'me' : 'remote'}')">${esc(p.username)}</span><span class="mts">${fmtDate(msg.timestamp)}</span></div>`
-    }
+        ? `<span class="ts-side">${fmtTime(msg.timestamp)}</span>`
+        : `<div class="mhdr"><span class="muser" onclick="openViewProfile('${isMe?'me':'remote'}')">${esc(p.username)}</span><span class="mts">${fmtDate(msg.timestamp)}</span></div>`
+      }
       ${body}
       <div class="rxns" id="rxns_${msg.id}"></div>
     </div>
@@ -926,144 +1029,131 @@ function appendMsgEl(msg) {
 
 function fmtText(t) {
   let s = esc(t);
-  s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  s = s.replace(/~~(.*?)~~/g, '<del>$1</del>');
-  s = s.replace(/`(.*?)`/g, '<code>$1</code>');
-  s = s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
-  s = s.replace(/@([A-Za-z0-9_]+)/g, (m, n) => `<span class="mention">@${esc(n)}</span>`);
+  s = s.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  s = s.replace(/\*(.*?)\*/g,'<em>$1</em>');
+  s = s.replace(/~~(.*?)~~/g,'<del>$1</del>');
+  s = s.replace(/`(.*?)`/g,'<code>$1</code>');
+  s = s.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+  s = s.replace(/@([A-Za-z0-9_]+)/g,(m,n)=>`<span class="mention">@${esc(n)}</span>`);
   return s;
 }
 
 function updateRxns(id) {
-  const el = document.getElementById('rxns_' + id); if (!el) return;
-  const msg = messages.find(m => m.id === id); if (!msg) return;
-  el.innerHTML = '';
-  Object.entries(msg.reactions || {}).forEach(([emoji, users]) => {
-    const s = document.createElement('span'); const mine = users.includes(me.username);
-    s.className = 'rxn' + (mine ? ' mine' : '');
-    s.innerHTML = `${emoji} <strong>${users.length}</strong>`;
-    s.title = users.join(', '); s.onclick = () => toggleRxn(id, emoji); el.appendChild(s);
+  const el = document.getElementById('rxns_'+id); if(!el) return;
+  const msg = messages.find(m=>m.id===id); if(!msg) return;
+  el.innerHTML='';
+  Object.entries(msg.reactions||{}).forEach(([emoji,users])=>{
+    const s=document.createElement('span'); const mine=users.includes(me.username);
+    s.className='rxn'+(mine?' mine':'');
+    s.innerHTML=`${emoji} <strong>${users.length}</strong>`;
+    s.title=users.join(', '); s.onclick=()=>toggleRxn(id,emoji); el.appendChild(s);
   });
-  const add = document.createElement('span'); add.className = 'rxn rxn-add';
-  add.innerHTML = '<i class="far fa-smile"></i>';
-  add.onclick = e => showRxnPicker(id, e.currentTarget); el.appendChild(add);
+  const add=document.createElement('span'); add.className='rxn rxn-add';
+  add.innerHTML='<i class="far fa-smile"></i>';
+  add.onclick=e=>showRxnPicker(id,e.currentTarget); el.appendChild(add);
 }
 
 function toggleRxn(msgId, emoji) {
-  const msg = messages.find(m => m.id === msgId); if (!msg) return;
-  if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
+  const msg = messages.find(m=>m.id===msgId); if(!msg) return;
+  if(!msg.reactions[emoji]) msg.reactions[emoji]=[];
   const i = msg.reactions[emoji].indexOf(me.username);
-  if (i === -1) msg.reactions[emoji].push(me.username); else msg.reactions[emoji].splice(i, 1);
-  if (!msg.reactions[emoji].length) delete msg.reactions[emoji];
+  if(i===-1) msg.reactions[emoji].push(me.username); else msg.reactions[emoji].splice(i,1);
+  if(!msg.reactions[emoji].length) delete msg.reactions[emoji];
   updateRxns(msgId);
-  send({ type: 'reaction', msgId, emoji, user: me.username, add: i === -1 });
+  send({type:'reaction',msgId,emoji,user:me.username,add:i===-1});
 }
 
 function showRxnPicker(msgId, btn) {
-  const ex = document.getElementById('rp_' + msgId); if (ex) { ex.remove(); return; }
-  const p = document.createElement('div'); p.id = 'rp_' + msgId;
-  p.style.cssText = 'position:absolute;z-index:100;background:var(--bg2);border-radius:12px;padding:8px;display:flex;gap:6px;flex-wrap:wrap;width:220px;box-shadow:0 8px 24px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08)';
-  ['👍', '❤️', '😂', '😮', '😢', '🎉', '🔥', '💯'].forEach(e => {
-    const s = document.createElement('span'); s.textContent = e;
-    s.style.cssText = 'font-size:22px;cursor:pointer;padding:4px;border-radius:6px;transition:.1s';
-    s.onmouseenter = () => s.style.background = 'rgba(255,255,255,.1)';
-    s.onmouseleave = () => s.style.background = '';
-    s.onclick = () => { toggleRxn(msgId, e); p.remove(); };
+  const ex=document.getElementById('rp_'+msgId); if(ex){ex.remove();return;}
+  const p=document.createElement('div'); p.id='rp_'+msgId;
+  p.style.cssText='position:absolute;z-index:100;background:var(--bg2);border-radius:12px;padding:8px;display:flex;gap:6px;flex-wrap:wrap;width:220px;box-shadow:0 8px 24px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08)';
+  ['👍','❤️','😂','😮','😢','🎉','🔥','💯'].forEach(e=>{
+    const s=document.createElement('span'); s.textContent=e;
+    s.style.cssText='font-size:22px;cursor:pointer;padding:4px;border-radius:6px;transition:.1s';
+    s.onmouseenter=()=>s.style.background='rgba(255,255,255,.1)';
+    s.onmouseleave=()=>s.style.background='';
+    s.onclick=()=>{toggleRxn(msgId,e);p.remove();};
     p.appendChild(s);
   });
-  btn.parentElement.style.position = 'relative';
+  btn.parentElement.style.position='relative';
   btn.parentElement.appendChild(p);
-  setTimeout(() => document.addEventListener('click', function h(ev) { if (!p.contains(ev.target)) { p.remove(); document.removeEventListener('click', h); } }, { once: false }), 50);
+  setTimeout(()=>document.addEventListener('click',function h(ev){if(!p.contains(ev.target)){p.remove();document.removeEventListener('click',h);}},{once:false}),50);
 }
 
 function openEdit(id) {
-  const msg = messages.find(m => m.id === id); if (!msg) return;
-  editTarget = msg; document.getElementById('editText').value = msg.content; openModal('editModal');
+  const msg = messages.find(m=>m.id===id); if(!msg) return;
+  editTarget=msg; document.getElementById('editText').value=msg.content; openModal('editModal');
 }
 function saveEdit() {
-  if (!editTarget) return;
-  const t = document.getElementById('editText').value.trim();
-  if (t && t !== editTarget.content) {
-    editTarget.content = t; editTarget.edited = true;
-    const el = document.querySelector(`.msg[data-id="${editTarget.id}"] .mtext`);
-    if (el) el.innerHTML = fmtText(t) + '<span class="medit">(edited)</span>';
-    send({ type: 'edit', msgId: editTarget.id, newContent: t });
+  if(!editTarget) return;
+  const t=document.getElementById('editText').value.trim();
+  if(t&&t!==editTarget.content) {
+    editTarget.content=t; editTarget.edited=true;
+    const el=document.querySelector(`.msg[data-id="${editTarget.id}"] .mtext`);
+    if(el) el.innerHTML=fmtText(t)+'<span class="medit">(edited)</span>';
+    send({type:'edit',msgId:editTarget.id,newContent:t});
   }
-  closeModal('editModal'); editTarget = null;
+  closeModal('editModal'); editTarget=null;
 }
 function delMsg(id) {
-  const i = messages.findIndex(m => m.id === id); if (i === -1) return;
-  messages.splice(i, 1); rebuildMsgs();
-  send({ type: 'delete', msgId: id });
+  const i=messages.findIndex(m=>m.id===id); if(i===-1) return;
+  messages.splice(i,1); rebuildMsgs();
+  send({type:'delete',msgId:id});
 }
 
-function scrollBottom() { const c = document.getElementById('msgs'); c.scrollTop = c.scrollHeight; }
-function saveHistory() { try { localStorage.setItem('dscrd_hist2', JSON.stringify({ messages, nextId })); } catch (e) { } }
+function scrollBottom() { const c=document.getElementById('msgs'); c.scrollTop=c.scrollHeight; }
+function saveHistory() { try{ localStorage.setItem('dscrd_hist2',JSON.stringify({messages,nextId})); }catch(e){} }
 function loadHistory() {
   try {
-    const s = localStorage.getItem('dscrd_hist2');
-    if (s) { const d = JSON.parse(s); messages = d.messages || []; nextId = d.nextId || 1; rebuildMsgs(); }
-  } catch (e) { }
+    const s=localStorage.getItem('dscrd_hist2');
+    if(s){ const d=JSON.parse(s); messages=d.messages||[]; nextId=d.nextId||1; rebuildMsgs(); }
+  } catch(e){}
 }
 
-// ── VOICE (updated for PeerJS) ─────────────
+// ── VOICE ──────────────────────────────────
 function handleVCClick() {
-  if (!connected) { showToast('Connect to a peer first', 'warn'); return; }
+  if(!connected) { showToast('Connect to a peer first','warn'); return; }
   isInVC ? leaveVC() : joinVC();
 }
 
 async function joinVC() {
-  if (isInVC) return;
+  if(isInVC) return;
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    // If we already have a call (from remote), answer it; otherwise, call the remote.
-    if (conn && conn.open && peer && currentRoomId) {
-      // Call the remote peer
-      mediaCall = peer.call(currentRoomId, localStream);
-      mediaCall.on('stream', remoteStream => {
-        const audio = document.getElementById('remAudio');
-        audio.srcObject = remoteStream;
-        audio.play();
-      });
-      mediaCall.on('close', () => {
-        if (isInVC) leaveVC();
-      });
-    }
-    isInVC = true;
+    localStream = await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+    isInVC=true;
     document.getElementById('vcPanel').classList.add('on');
     document.getElementById('vcChi').classList.add('act');
-    document.getElementById('micBtn').style.display = 'flex';
-    document.getElementById('deafBtn').style.display = 'flex';
+    document.getElementById('micBtn').style.display='flex';
+    document.getElementById('deafBtn').style.display='flex';
     updateVCUI(); updateVCMems();
-    showToast('Joined voice channel', 'ok');
-  } catch (e) { showToast('Mic error: ' + e.message, 'err'); }
+    showToast('Joined voice channel','ok');
+  } catch(e) { showToast('Mic error: '+e.message,'err'); }
 }
 
 function leaveVC() {
-  if (mediaCall) { mediaCall.close(); mediaCall = null; }
-  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  isInVC = false; isMuted = false; isDeafened = false;
+  if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
+  isInVC=false; isMuted=false; isDeafened=false;
   document.getElementById('vcPanel').classList.remove('on');
   document.getElementById('vcChi').classList.remove('act');
-  document.getElementById('micBtn').style.display = 'none';
-  document.getElementById('deafBtn').style.display = 'none';
-  document.getElementById('remAudio').srcObject = null;
+  document.getElementById('micBtn').style.display='none';
+  document.getElementById('deafBtn').style.display='none';
+  document.getElementById('remAudio').srcObject=null;
   updateVCUI(); updateVCMems();
 }
 
 function toggleMic() {
-  isMuted = !isMuted;
-  if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
-  showToast(isMuted ? 'Muted' : 'Unmuted', isMuted ? 'warn' : 'ok', 1500);
+  isMuted=!isMuted;
+  if(localStream) localStream.getAudioTracks().forEach(t=>t.enabled=!isMuted);
+  showToast(isMuted?'Muted':'Unmuted',isMuted?'warn':'ok',1500);
   updateVCUI();
 }
 function toggleDeafen() {
-  isDeafened = !isDeafened;
-  const a = document.getElementById('remAudio'); if (a) a.muted = isDeafened;
-  if (isDeafened) { isMuted = true; if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = false); }
-  else { isMuted = false; if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = true); }
-  showToast(isDeafened ? 'Deafened' : 'Undeafened', isDeafened ? 'warn' : 'ok', 1500);
+  isDeafened=!isDeafened;
+  const a=document.getElementById('remAudio'); if(a) a.muted=isDeafened;
+  if(isDeafened) { isMuted=true; if(localStream) localStream.getAudioTracks().forEach(t=>t.enabled=false); }
+  else { isMuted=false; if(localStream) localStream.getAudioTracks().forEach(t=>t.enabled=true); }
+  showToast(isDeafened?'Deafened':'Undeafened',isDeafened?'warn':'ok',1500);
   updateVCUI();
 }
 
@@ -1072,82 +1162,33 @@ function updateVCUI() {
     micBtn: document.getElementById('micBtn'), deafBtn: document.getElementById('deafBtn'),
     vcMuteBtn: document.getElementById('vcMuteBtn'), vcDeafBtn: document.getElementById('vcDeafBtn')
   };
-  if (els.micBtn) { els.micBtn.innerHTML = `<i class="fas fa-${isMuted ? 'microphone-slash' : 'microphone'}"></i>`; els.micBtn.style.color = isMuted ? 'var(--red)' : ''; }
-  if (els.deafBtn) { els.deafBtn.innerHTML = `<i class="fas fa-${isDeafened ? 'deaf' : 'headphones'}"></i>`; els.deafBtn.style.color = isDeafened ? 'var(--red)' : ''; }
-  if (els.vcMuteBtn) { els.vcMuteBtn.className = 'vcbtn' + (isMuted ? ' muted' : ''); els.vcMuteBtn.innerHTML = `<i class="fas fa-${isMuted ? 'microphone-slash' : 'microphone'}"></i>`; }
-  if (els.vcDeafBtn) { els.vcDeafBtn.className = 'vcbtn' + (isDeafened ? ' deaf' : ''); els.vcDeafBtn.innerHTML = `<i class="fas fa-${isDeafened ? 'deaf' : 'headphones'}"></i>`; }
+  if(els.micBtn){ els.micBtn.innerHTML=`<i class="fas fa-${isMuted?'microphone-slash':'microphone'}"></i>`;els.micBtn.style.color=isMuted?'var(--red)':''; }
+  if(els.deafBtn){ els.deafBtn.innerHTML=`<i class="fas fa-${isDeafened?'deaf':'headphones'}"></i>`;els.deafBtn.style.color=isDeafened?'var(--red)':''; }
+  if(els.vcMuteBtn){ els.vcMuteBtn.className='vcbtn'+(isMuted?' muted':'');els.vcMuteBtn.innerHTML=`<i class="fas fa-${isMuted?'microphone-slash':'microphone'}"></i>`; }
+  if(els.vcDeafBtn){ els.vcDeafBtn.className='vcbtn'+(isDeafened?' deaf':'');els.vcDeafBtn.innerHTML=`<i class="fas fa-${isDeafened?'deaf':'headphones'}"></i>`; }
 }
 
 function updateVCMems() {
-  const l = document.getElementById('vcMems'); l.innerHTML = '';
-  if (!isInVC) return;
-  const mk = (p, m, d) => {
-    const div = document.createElement('div'); div.className = 'vc-mem';
-    const av = document.createElement('div'); av.className = 'vc-av'; setAvEl(av, p);
-    const nm = document.createElement('span'); nm.textContent = p.username;
-    const ic = document.createElement('div'); ic.className = 'vc-icons';
-    if (m) ic.innerHTML += '<i class="fas fa-microphone-slash"></i>';
-    if (d) ic.innerHTML += '<i class="fas fa-deaf"></i>';
-    div.appendChild(av); div.appendChild(nm); div.appendChild(ic); return div;
+  const l=document.getElementById('vcMems'); l.innerHTML='';
+  if(!isInVC) return;
+  const mk=(p,m,d)=>{
+    const div=document.createElement('div'); div.className='vc-mem';
+    const av=document.createElement('div'); av.className='vc-av'; setAvEl(av,p);
+    const nm=document.createElement('span'); nm.textContent=p.username;
+    const ic=document.createElement('div'); ic.className='vc-icons';
+    if(m) ic.innerHTML+='<i class="fas fa-microphone-slash"></i>';
+    if(d) ic.innerHTML+='<i class="fas fa-deaf"></i>';
+    div.appendChild(av);div.appendChild(nm);div.appendChild(ic);return div;
   };
-  l.appendChild(mk(me, isMuted, isDeafened));
-  if (connected) l.appendChild(mk(remote, false, false));
-}
-
-// ── EMOJI & GIF (unchanged) ────────────────
-const EMOJIS = ['😀', '😂', '😍', '🥺', '😎', '🤔', '😭', '🥳', '😅', '😤', '🤯', '🫡', '💀', '🙏', '👀', '✨', '🔥', '💯', '❤️', '🎉', '👍', '👎', '💪', '🤝', '🫂', '🍕', '🎮', '🎶', '⭐', '🚀', '🌊', '🌙', '☀️', '🌈', '💎', '🏆', '🎯', '🎲', '🦋', '🐱', '🐶', '🐸', '🦊', '🦁'];
-function initEmoji() {
-  const g = document.getElementById('egrid');
-  EMOJIS.forEach(e => { const s = document.createElement('span'); s.textContent = e; s.onclick = () => insertEmoji(e); g.appendChild(s); });
-}
-function insertEmoji(e) { const i = document.getElementById('mInput'); i.value += e; i.focus(); hideEmoji(); }
-function hideEmoji() { document.getElementById('emojiPicker').style.display = 'none'; }
-function toggleEmoji(btn) {
-  const p = document.getElementById('emojiPicker');
-  if (p.style.display === 'block') { hideEmoji(); return; }
-  const r = btn.getBoundingClientRect();
-  p.style.display = 'block';
-  p.style.bottom = (window.innerHeight - r.top + 8) + 'px';
-  p.style.left = Math.min(r.left, window.innerWidth - 310) + 'px';
-  document.getElementById('esearch').value = ''; filterEmoji('');
-}
-function filterEmoji(q) { document.getElementById('egrid').querySelectorAll('span').forEach(s => { s.style.display = !q || s.textContent.includes(q) ? '' : 'none'; }); }
-function toggleGif(btn) {
-  const p = document.getElementById('gifPicker');
-  if (p.style.display === 'block') { p.style.display = 'none'; return; }
-  const r = btn.getBoundingClientRect();
-  p.style.display = 'block';
-  p.style.bottom = (window.innerHeight - r.top + 8) + 'px';
-  p.style.left = Math.max(0, Math.min(r.left - 80, window.innerWidth - 330)) + 'px';
-}
-function debGif(q) { clearTimeout(gifTimer); if (!q) return; gifTimer = setTimeout(() => searchGif(q), 450); }
-async function searchGif(q) {
-  const r = document.getElementById('gresults');
-  r.innerHTML = '<div style="color:var(--txt3);font-size:13px;text-align:center;padding:20px;grid-column:span 2"><i class="fas fa-spinner fa-spin"></i> Searching…</div>';
-  try {
-    const res = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${TENOR_KEY}&limit=12&media_filter=gif,tinygif`);
-    if (!res.ok) throw new Error('Tenor error ' + res.status);
-    const data = await res.json();
-    r.innerHTML = '';
-    if (!data.results?.length) { r.innerHTML = '<div style="color:var(--txt3);font-size:13px;text-align:center;padding:20px;grid-column:span 2">No results found</div>'; return; }
-    data.results.forEach(g => {
-      const preview = g.media_formats?.tinygif?.url || g.media_formats?.gif?.url;
-      const full = g.media_formats?.gif?.url || preview;
-      if (!preview) return;
-      const img = document.createElement('img'); img.src = preview; img.loading = 'lazy';
-      img.onclick = () => { sendGif(full); document.getElementById('gifPicker').style.display = 'none'; };
-      r.appendChild(img);
-    });
-  } catch (e) {
-    r.innerHTML = '<div style="color:var(--red);font-size:13px;text-align:center;padding:20px;grid-column:span 2">Failed to load GIFs</div>';
-  }
+  l.appendChild(mk(me,isMuted,isDeafened));
+  if(connected) l.appendChild(mk(remote,false,false));
 }
 
 // ── MISC ───────────────────────────────────
-function openLB(src) { document.getElementById('lbImg').src = src; document.getElementById('lb').classList.add('open'); }
-function dlFile(url, name) { const a = document.createElement('a'); a.href = url; a.download = name; a.click(); }
-function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }
-function switchCh(name, el) { document.querySelectorAll('.chi').forEach(c => c.classList.remove('act')); el.classList.add('act'); document.getElementById('chName').textContent = name; document.getElementById('mInput').placeholder = 'Message #' + name; }
+function openLB(src) { document.getElementById('lbImg').src=src; document.getElementById('lb').classList.add('open'); }
+function dlFile(url,name) { const a=document.createElement('a');a.href=url;a.download=name;a.click(); }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,200)+'px'; }
+function switchCh(name,el) { document.querySelectorAll('.chi').forEach(c=>c.classList.remove('act')); el.classList.add('act'); document.getElementById('chName').textContent=name; document.getElementById('mInput').placeholder='Message #'+name; }
 
 // ── INIT ───────────────────────────────────
 window.onload = () => {
@@ -1155,25 +1196,27 @@ window.onload = () => {
   initEmoji();
 
   const inp = document.getElementById('mInput');
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); } else onTyping(); });
-  inp.addEventListener('input', () => autoResize(inp));
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendText();}else onTyping(); });
+  inp.addEventListener('input', ()=>autoResize(inp));
 
   document.getElementById('sendBtn').onclick = sendText;
-  document.getElementById('fInput').onchange = e => { if (e.target.files[0]) sendFile(e.target.files[0]); e.target.value = ''; };
-  document.getElementById('emojiBtn').onclick = e => { e.stopPropagation(); toggleEmoji(e.currentTarget); };
-  document.getElementById('gifBtn').onclick = e => { e.stopPropagation(); toggleGif(e.currentTarget); };
+  document.getElementById('fInput').onchange = e=>{ if(e.target.files[0]) sendFile(e.target.files[0]); e.target.value=''; };
+  document.getElementById('emojiBtn').onclick = e=>{ e.stopPropagation(); toggleEmoji(e.currentTarget); };
+  document.getElementById('gifBtn').onclick = e=>{ e.stopPropagation(); toggleGif(e.currentTarget); };
 
-  document.addEventListener('click', e => {
-    if (!e.target.closest('#emojiPicker') && !e.target.closest('#emojiBtn')) hideEmoji();
-    if (!e.target.closest('#gifPicker') && !e.target.closest('#gifBtn')) document.getElementById('gifPicker').style.display = 'none';
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('#emojiPicker')&&!e.target.closest('#emojiBtn')) hideEmoji();
+    if(!e.target.closest('#gifPicker')&&!e.target.closest('#gifBtn')) document.getElementById('gifPicker').style.display='none';
   });
 
-  document.querySelector('.chat').addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
-  document.querySelector('.chat').addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) sendFile(f); });
+  // Drag & drop files
+  document.querySelector('.chat').addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='copy';});
+  document.querySelector('.chat').addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)sendFile(f);});
 
-  document.addEventListener('paste', e => { const item = [...e.clipboardData.items].find(i => i.type.startsWith('image/')); if (item) sendFile(item.getAsFile()); });
+  // Paste images
+  document.addEventListener('paste',e=>{ const item=[...e.clipboardData.items].find(i=>i.type.startsWith('image/')); if(item)sendFile(item.getAsFile()); });
 
-  addSys('👋 Welcome to DSCRD! Click the <i class="fas fa-door-open"></i> room icon in the header to create or join a room — completely peer‑to‑peer.');
+  addSys('👋 Welcome to DSCRD! Click the <i class="fas fa-plug"></i> plug icon in the header to connect peer-to-peer — completely serverless.');
 };
 </script>
 </body>
