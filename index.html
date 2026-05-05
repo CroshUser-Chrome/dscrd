@@ -1,1223 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>DSCRD</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-:root{
-  --bg0:#1e1f22;--bg1:#232428;--bg2:#2b2d31;--bg3:#313338;--bg4:#383a40;
-  --txt0:#f2f3f5;--txt1:#dbdee1;--txt2:#b5bac1;--txt3:#80848e;
-  --acc:#5865f2;--acc2:#4752c4;--acc-dim:rgba(88,101,242,.15);
-  --grn:#23a55a;--red:#da373c;--red2:#a12d31;--ylw:#f0b232;
-  --ch:#949ba4;--r:8px;--rl:12px;
-  --font:'DM Sans','Helvetica Neue',Arial,sans-serif;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden}
-body{font-family:var(--font);background:var(--bg3);color:var(--txt1);font-size:15px;line-height:1.375}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--bg0);border-radius:4px}::-webkit-scrollbar-thumb:hover{background:#3c3f45}
-
-.app{display:flex;height:100vh;width:100vw}
-
-/* GUILDS */
-.guilds{width:72px;background:var(--bg0);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:2px;overflow-y:auto;flex-shrink:0}
-.gw{position:relative;display:flex;align-items:center;width:100%;justify-content:center;height:48px;margin-bottom:2px}
-.gpill{position:absolute;left:0;width:4px;height:0;background:#fff;border-radius:0 4px 4px 0;transition:.2s}
-.gw:hover .gpill,.gw.act .gpill{height:20px;top:50%;transform:translateY(-50%)}
-.gw.act .gpill{height:40px}
-.gi{width:48px;height:48px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txt2);font-size:20px;transition:.2s;overflow:hidden;background-size:cover;background-position:center;flex-shrink:0}
-.gw.act .gi,.gw:hover .gi{border-radius:16px}
-.gw.act .gi{background:var(--acc);color:#fff}.gw:hover .gi{background:#3c3f45;color:#fff}
-.gsep{width:32px;height:2px;background:#3c3f45;border-radius:1px;margin:4px 0}
-
-/* SIDEBAR */
-.sidebar{width:240px;background:var(--bg2);display:flex;flex-direction:column;flex-shrink:0}
-.srv-hdr{padding:0 16px;height:48px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 0 rgba(0,0,0,.3);font-weight:700;font-size:16px;color:var(--txt0);cursor:pointer;flex-shrink:0;transition:.1s}
-.srv-hdr:hover{background:rgba(255,255,255,.04)}
-.ch-sec{padding:16px 8px 4px 16px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ch);letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between}
-.ch-sec button{background:none;border:none;color:var(--ch);cursor:pointer;font-size:14px;padding:2px;border-radius:4px;transition:.1s}
-.ch-sec button:hover{color:var(--txt0)}
-.ch-list{flex:1;overflow-y:auto;padding:0 8px}
-.chi{padding:6px 8px;margin:1px 0;border-radius:var(--r);display:flex;align-items:center;gap:8px;color:var(--ch);cursor:pointer;font-size:15px;font-weight:500;transition:.1s}
-.chi:hover{background:rgba(255,255,255,.06);color:var(--txt1)}.chi.act{background:rgba(255,255,255,.1);color:var(--txt0)}
-.chi i{width:16px;text-align:center;flex-shrink:0}
-.vc-mems{padding:0 8px}
-.vc-mem{padding:4px 8px;border-radius:var(--r);display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ch)}
-.vc-av{width:24px;height:24px;border-radius:50%;background:var(--acc);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
-.vc-icons{margin-left:auto;display:flex;gap:4px;color:var(--txt3);font-size:11px}
-
-/* USER PANEL */
-.user-panel{padding:8px;background:var(--bg1);display:flex;align-items:center;gap:8px;flex-shrink:0;border-top:1px solid rgba(0,0,0,.2)}
-.uav-wrap{position:relative;cursor:pointer;flex-shrink:0}
-.uav{width:32px;height:32px;border-radius:50%;background:var(--acc);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden}
-.sdot{position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;border:2px solid var(--bg1);background:var(--grn)}
-.uinfo{flex:1;min-width:0}
-.uname{font-size:13px;font-weight:600;color:var(--txt0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.utag{font-size:11px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.uctrl{display:flex;gap:2px}
-.ucbtn{background:none;border:none;color:var(--txt3);cursor:pointer;width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;transition:.1s}
-.ucbtn:hover{background:rgba(255,255,255,.06);color:var(--txt1)}
-
-/* VC PANEL */
-.vc-panel{background:rgba(22,24,26,.97);border-top:1px solid rgba(255,255,255,.06);padding:8px;display:none;flex-shrink:0}
-.vc-panel.on{display:block}
-.vc-status{font-size:12px;color:var(--grn);font-weight:700;margin-bottom:1px}
-.vc-lbl{font-size:11px;color:var(--txt3);margin-bottom:6px}
-.vc-ctrls{display:flex;gap:6px}
-.vcbtn{flex:1;padding:6px;border-radius:var(--r);border:none;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--txt2);background:rgba(255,255,255,.06);font-family:var(--font);transition:.1s}
-.vcbtn:hover{background:rgba(255,255,255,.1);color:var(--txt0)}
-.vcbtn.muted,.vcbtn.deaf{background:rgba(218,55,60,.2);color:var(--red)}
-.vcbtn.disc{background:rgba(218,55,60,.15);color:var(--red)}.vcbtn.disc:hover{background:var(--red);color:#fff}
-
-/* CHAT */
-.chat{flex:1;display:flex;flex-direction:column;background:var(--bg3);min-width:0}
-.chat-hdr{height:48px;padding:0 16px;background:var(--bg3);box-shadow:0 1px 0 rgba(0,0,0,.3);display:flex;align-items:center;gap:8px;flex-shrink:0;z-index:10}
-.chat-hdr-l{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
-.ch-ico{color:var(--ch);font-size:22px}
-.ch-nm{font-weight:700;font-size:16px;color:var(--txt0)}
-.hdiv{width:1px;height:20px;background:#3c3f45;margin:0 4px;flex-shrink:0}
-.ch-topic{font-size:13px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-.hdr-acts{display:flex;gap:4px;align-items:center;flex-shrink:0}
-.hdrbtn{background:none;border:none;color:var(--txt3);cursor:pointer;width:32px;height:32px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:16px;transition:.1s}
-.hdrbtn:hover{background:rgba(255,255,255,.06);color:var(--txt1)}
-.conn-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--txt3);white-space:nowrap}
-.cdot{width:8px;height:8px;border-radius:50%;background:#747f8d;flex-shrink:0;transition:.3s}
-.cdot.on{background:var(--grn)}.cdot.blink{background:var(--ylw);animation:pulse 1.2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.room-pill{display:flex;align-items:center;gap:6px;background:var(--bg2);border-radius:20px;padding:3px 10px;font-size:12px;flex-shrink:0}
-.rcode{font-family:monospace;font-weight:700;letter-spacing:2px;color:var(--txt0);font-size:13px;cursor:pointer;user-select:all}
-.rcode:hover{color:var(--acc)}
-
-/* MESSAGES */
-.msgs{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column}
-.welcome{padding:32px 16px 24px}
-.welcome-icon{width:68px;height:68px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px}
-.welcome h2{font-size:28px;font-weight:800;color:var(--txt0);margin-bottom:8px}
-.welcome p{font-size:15px;color:var(--txt3)}
-.divider{display:flex;align-items:center;gap:8px;padding:8px 16px;margin:8px 0}
-.divider span{font-size:12px;color:var(--txt3);white-space:nowrap}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:#3c3f45}
-.msg{padding:2px 16px;display:flex;gap:0;align-items:flex-start;position:relative;transition:background .05s}
-.msg:hover{background:rgba(0,0,0,.06)}
-.av-col{width:56px;flex-shrink:0;padding-top:2px;display:flex;justify-content:center}
-.mav{width:40px;height:40px;border-radius:50%;background:var(--acc);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;cursor:pointer;overflow:hidden;color:#fff;flex-shrink:0}
-.msg.compact .av-col{visibility:hidden}
-.ts-side{position:absolute;left:20px;top:6px;font-size:10px;color:var(--txt3);display:none;white-space:nowrap}
-.msg.compact:hover .ts-side{display:block}
-.mcont{flex:1;min-width:0}
-.mhdr{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;flex-wrap:wrap}
-.muser{font-weight:700;font-size:15px;color:var(--txt0);cursor:pointer}.muser:hover{text-decoration:underline}
-.mts{font-size:11px;color:var(--txt3)}
-.mtext{color:var(--txt1);word-break:break-word;line-height:1.375}
-.mtext a{color:#00a8fc}.mtext a:hover{text-decoration:underline}
-.mtext code{background:var(--bg0);padding:1px 5px;border-radius:4px;font-size:13px;font-family:monospace}
-.medit{font-size:10px;color:var(--txt3);margin-left:4px}
-.mention{background:var(--acc-dim);color:#bdc3f3;border-radius:4px;padding:0 3px;cursor:pointer}.mention:hover{background:var(--acc);color:#fff}
-.macts{position:absolute;right:16px;top:-16px;display:none;align-items:center;background:var(--bg2);border-radius:var(--r);padding:4px 6px;box-shadow:0 4px 12px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.06);gap:2px;z-index:5}
-.msg:hover .macts{display:flex}
-.mabtn{background:none;border:none;color:var(--txt3);cursor:pointer;width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;transition:.1s}
-.mabtn:hover{background:rgba(255,255,255,.08);color:var(--txt1)}
-.mabtn.danger:hover{background:rgba(218,55,60,.2);color:var(--red)}
-.sysmsg{padding:4px 16px;color:var(--txt3);font-size:13px;display:flex;align-items:center;gap:8px}
-.sysmsg i{color:var(--ylw)}
-.rxns{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
-.rxn{background:var(--bg2);border:1px solid transparent;border-radius:20px;padding:2px 8px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:.1s;color:var(--txt2)}
-.rxn:hover{background:rgba(88,101,242,.1);border-color:var(--acc)}.rxn.mine{background:var(--acc-dim);border-color:var(--acc);color:#bdc3f3}
-.rxn-add{background:transparent;border:1px solid #3c3f45;opacity:0}.msg:hover .rxn-add{opacity:1}
-.mprev{margin-top:8px;max-width:400px;border-radius:var(--rl);overflow:hidden}
-.mprev img{max-width:100%;max-height:300px;display:block;border-radius:var(--rl);cursor:zoom-in}
-.mprev video{max-width:100%;max-height:300px;display:block;border-radius:var(--rl)}
-.mprev audio{width:100%;max-width:320px;margin-top:4px}
-.fattach{margin-top:8px;background:var(--bg2);border:1px solid #3c3f45;border-radius:var(--rl);padding:10px 14px;display:inline-flex;align-items:center;gap:12px;cursor:pointer;max-width:400px;transition:.1s}
-.fattach:hover{background:#3c3f45}
-.fico{width:36px;height:36px;border-radius:var(--r);background:var(--acc-dim);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:18px;flex-shrink:0}
-.fnm{font-size:14px;font-weight:600;color:var(--acc);word-break:break-all}
-.fsz{font-size:12px;color:var(--txt3)}
-
-/* TYPING */
-.typing-bar{padding:4px 16px 8px;min-height:24px;font-size:13px;color:var(--txt3);display:flex;align-items:center;gap:6px}
-.tdots{display:flex;gap:3px}
-.tdots span{width:5px;height:5px;border-radius:50%;background:var(--txt3);display:block;animation:bounce 1.2s ease-in-out infinite}
-.tdots span:nth-child(2){animation-delay:.15s}.tdots span:nth-child(3){animation-delay:.3s}
-@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}}
-
-/* INPUT */
-.input-area{padding:0 16px 16px;flex-shrink:0}
-.inp-wrap{background:var(--bg4);border-radius:var(--rl);display:flex;align-items:center;padding:0 8px;gap:4px;box-shadow:0 0 0 1px rgba(0,0,0,.3) inset}
-.inp-wrap:focus-within{box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
-.ibtn{background:none;border:none;color:var(--txt3);cursor:pointer;padding:8px;border-radius:var(--r);font-size:20px;transition:.1s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.ibtn:hover{color:var(--txt1)}.ibtn.send{color:var(--acc);font-size:18px}.ibtn.send:hover{color:#fff}
-.minput{flex:1;background:transparent;border:none;color:var(--txt1);font-size:15px;outline:none;padding:11px 0;font-family:var(--font);line-height:1.375;resize:none;max-height:50vh;min-height:22px;overflow-y:auto}
-.minput::placeholder{color:var(--txt3)}
-
-/* MEMBERS */
-.members{width:240px;background:var(--bg2);flex-shrink:0;overflow-y:auto;padding:16px 8px}
-.msec-hdr{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ch);letter-spacing:.04em;padding:8px 8px 4px}
-.mitem{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:var(--r);cursor:pointer;transition:.1s}
-.mitem:hover{background:rgba(255,255,255,.06)}
-.mav-wrap{position:relative;flex-shrink:0}
-.mav2{width:32px;height:32px;border-radius:50%;background:var(--acc);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden}
-.minfo .mnm{font-size:14px;font-weight:500;color:var(--txt2)}.mitem:hover .mnm{color:var(--txt0)}
-.minfo .mstatus{font-size:11px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
-
-/* PICKERS */
-.picker{position:fixed;z-index:500;background:var(--bg2);border-radius:var(--rl);box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);display:none}
-.emoji-picker{padding:12px;width:300px}
-.esearch{width:100%;background:var(--bg0);border:none;color:var(--txt1);padding:7px 10px;border-radius:var(--r);margin-bottom:8px;font-size:13px;outline:none;font-family:var(--font)}
-.egrid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
-.egrid span{font-size:22px;cursor:pointer;text-align:center;padding:4px;border-radius:6px;transition:.1s}
-.egrid span:hover{background:rgba(255,255,255,.1)}
-.gif-picker{padding:12px;width:320px}
-.gsearch{width:100%;background:var(--bg0);border:none;color:var(--txt1);padding:7px 10px;border-radius:var(--r);margin-bottom:8px;font-size:13px;outline:none;font-family:var(--font)}
-.gresults{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:240px;overflow-y:auto}
-.gresults img{width:100%;height:100px;object-fit:cover;border-radius:var(--r);cursor:pointer;transition:.1s}
-.gresults img:hover{opacity:.8}
-.gif-attr{font-size:10px;color:var(--txt3);text-align:right;margin-top:4px}
-
-/* MODALS */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(2px);align-items:center;justify-content:center;z-index:1000}
-.overlay.open{display:flex}
-.mcard{background:var(--bg2);border-radius:var(--rl);width:460px;max-width:92vw;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.08);animation:min .15s ease-out}
-@keyframes min{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
-.mhdr{padding:20px 20px 0}.mhdr h2{font-size:20px;font-weight:800;color:var(--txt0)}.mhdr p{font-size:13px;color:var(--txt3);margin-top:4px}
-.mbody{padding:20px}
-.mfoot{padding:16px 20px;background:var(--bg0);display:flex;justify-content:flex-end;gap:8px}
-.fgrp{margin-bottom:16px}
-.flbl{display:block;font-size:12px;font-weight:700;text-transform:uppercase;color:var(--ch);letter-spacing:.04em;margin-bottom:6px}
-.finput,.ftarea{width:100%;background:var(--bg0);border:1px solid transparent;padding:9px 12px;border-radius:var(--r);color:var(--txt1);font-size:15px;font-family:var(--font);outline:none;transition:.15s}
-.finput:focus,.ftarea:focus{border-color:var(--acc)}.ftarea{resize:vertical;min-height:80px;max-height:200px;line-height:1.5}
-.finput::placeholder,.ftarea::placeholder{color:var(--txt3)}
-.mbtn{padding:9px 20px;border-radius:var(--r);border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);transition:.1s}
-.mbtn.pri{background:var(--acc);color:#fff}.mbtn.pri:hover{background:var(--acc2)}
-.mbtn.sec{background:transparent;color:var(--txt2)}.mbtn.sec:hover{text-decoration:underline}
-
-/* PROFILE MODAL */
-.pbanner{height:80px;background:linear-gradient(135deg,var(--acc),#7289da);position:relative;flex-shrink:0}
-.pav-edit{position:absolute;bottom:-42px;left:16px;width:80px;height:80px;border-radius:50%;background:var(--bg2);border:6px solid var(--bg2);background-size:cover;background-position:center;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;overflow:hidden}
-.pav-ov{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:.15s;font-size:12px;font-weight:700;gap:3px}
-.pav-edit:hover .pav-ov{opacity:1}
-.pbody{padding:56px 16px 16px}
-.swatches{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.sw{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.1s;flex-shrink:0}
-.sw:hover,.sw.sel{border-color:#fff}
-
-/* VIEW PROFILE */
-.vcard{background:var(--bg2);border-radius:var(--rl);width:280px;max-width:92vw;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:min .15s ease-out}
-.vbanner{height:60px}
-.vinner{padding:0 16px 16px}
-.vav-row{position:relative;margin-top:-32px;margin-bottom:12px;display:flex;align-items:flex-end;justify-content:space-between}
-.vav{width:64px;height:64px;border-radius:50%;border:5px solid var(--bg2);background:var(--acc);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;overflow:hidden}
-.vnm{font-size:18px;font-weight:800;color:var(--txt0);margin-bottom:2px}
-.vcst{font-size:13px;color:var(--txt3);margin-bottom:10px}
-.vdiv{height:1px;background:#3c3f45;margin:10px 0}
-.vsec{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ch);letter-spacing:.04em;margin-bottom:6px}
-.vbio{font-size:14px;color:var(--txt2);line-height:1.5}
-
-/* SIGNAL MODAL */
-.sig-modal{width:520px}
-.sig-tabs{display:flex;border-bottom:1px solid #3c3f45;margin-bottom:16px}
-.sig-tab{padding:8px 20px;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:14px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:var(--font);transition:.1s}
-.sig-tab.act{color:var(--acc);border-bottom-color:var(--acc)}
-.sig-step{font-size:13px;color:var(--txt3);margin-bottom:8px;line-height:1.5}
-.sig-step strong{color:var(--txt1)}
-.sig-box{width:100%;background:var(--bg0);border:1px solid #3c3f45;border-radius:var(--r);color:var(--txt1);font-family:monospace;font-size:11px;padding:10px;resize:none;outline:none;min-height:80px;line-height:1.5;word-break:break-all}
-.sig-box:focus{border-color:var(--acc)}
-.copy-btn{background:var(--bg4);border:none;color:var(--txt2);padding:6px 12px;border-radius:var(--r);font-size:13px;cursor:pointer;font-family:var(--font);transition:.1s;display:inline-flex;align-items:center;gap:6px}
-.copy-btn:hover{background:#3c3f45;color:var(--txt0)}
-.sig-status{font-size:13px;padding:8px 12px;border-radius:var(--r);background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.3);color:#bdc3f3;display:flex;align-items:center;gap:8px}
-.sig-status.ok{background:rgba(35,165,90,.1);border-color:rgba(35,165,90,.3);color:var(--grn)}
-.sig-status.err{background:rgba(218,55,60,.1);border-color:rgba(218,55,60,.3);color:var(--red)}
-.sig-note{font-size:12px;color:var(--txt3);margin-top:8px;line-height:1.5}
-
-/* TOASTS */
-.toasts{position:fixed;bottom:80px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.toast{background:var(--bg2);border-radius:var(--r);padding:10px 16px;font-size:14px;color:var(--txt1);box-shadow:0 4px 16px rgba(0,0,0,.4);animation:sin .2s ease-out;border-left:3px solid var(--acc);display:flex;align-items:center;gap:8px;max-width:300px}
-.toast.ok{border-color:var(--grn)}.toast.err{border-color:var(--red)}.toast.warn{border-color:var(--ylw)}
-@keyframes sin{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-@keyframes sout{to{opacity:0;transform:translateX(20px)}}
-
-/* LIGHTBOX */
-.lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:3000;align-items:center;justify-content:center;cursor:zoom-out}
-.lb.open{display:flex}.lb img{max-width:90vw;max-height:90vh;border-radius:var(--rl)}
-
-@media(max-width:900px){.members{display:none}}
-@media(max-width:700px){.sidebar{width:56px}.chi span,.srv-hdr span{display:none}.ch-topic{display:none}}
-@media(max-width:500px){.guilds{display:none}}
-</style>
+    <meta charset="UTF-8">
+    <title>Client‑Side Proxy (Service Worker)</title>
+    <style>
+        body { font-family: sans-serif; margin: 2rem; background: #f8f8f8; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        input { width: 80%; padding: 0.5rem; font-size: 1rem; }
+        button { padding: 0.5rem 1rem; font-size: 1rem; }
+        .note { font-size: 0.9rem; color: #555; margin-top: 1rem; }
+    </style>
 </head>
 <body>
-<div class="app">
-
-<!-- Guilds -->
-<div class="guilds">
-  <div class="gw act">
-    <div class="gpill"></div>
-    <div class="gi" title="DSCRD">
-      <svg width="26" height="20" viewBox="0 0 71 55" fill="none"><path d="M60.1 4.9A58.6 58.6 0 0045.6.6a.2.2 0 00-.2.1 37 37 0 00-1.8 3.6 54.1 54.1 0 00-16.3 0A37 37 0 0025.5.7a.2.2 0 00-.2-.1A58.4 58.4 0 0010.8 4.9a.2.2 0 00-.1.1C1.6 18.2-.9 31 .3 43.6a.2.2 0 00.1.2 58.9 58.9 0 0017.7 9 .2.2 0 00.2-.1c1.4-1.9 2.6-3.9 3.7-6a.2.2 0 00-.1-.3 38.8 38.8 0 01-5.5-2.6.2.2 0 010-.4l1.1-.9a.2.2 0 01.2 0c11.6 5.3 24.1 5.3 35.5 0a.2.2 0 01.2 0l1.1.9a.2.2 0 010 .4 36.1 36.1 0 01-5.6 2.6.2.2 0 00-.1.3c1.1 2.1 2.3 4.1 3.7 6a.2.2 0 00.2.1 58.7 58.7 0 0017.7-9 .2.2 0 00.1-.2C73 29.1 69.5 16.3 60.2 5a.2.2 0 00-.1-.1zM23.7 36c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2 6.5 3.2 6.4 7.2c0 4-2.8 7.2-6.4 7.2zm23.7 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2 6.4 3.2 6.4 7.2-2.8 7.2-6.4 7.2z" fill="currentColor"/></svg>
-    </div>
-  </div>
-  <div class="gsep"></div>
-  <div class="gw" onclick="showToast('More servers coming soon!','info')">
-    <div class="gpill"></div>
-    <div class="gi"><i class="fas fa-plus" style="font-size:16px"></i></div>
-  </div>
-</div>
-
-<!-- Sidebar -->
-<div class="sidebar">
-  <div class="srv-hdr"><span>DSCRD</span><i class="fas fa-chevron-down" style="font-size:13px"></i></div>
-  <div class="ch-list">
-    <div class="ch-sec"><span>Text Channels</span><button title="Add"><i class="fas fa-plus"></i></button></div>
-    <div class="chi act" onclick="switchCh('general',this)"><i class="fas fa-hashtag"></i><span>general</span></div>
-    <div class="chi" onclick="switchCh('files',this)"><i class="fas fa-file-alt"></i><span>files</span></div>
-    <div class="ch-sec" style="margin-top:8px"><span>Voice Channels</span></div>
-    <div class="chi" id="vcChi" onclick="handleVCClick()">
-      <i class="fas fa-volume-up"></i><span>General</span>
-      <i class="fas fa-phone-alt" id="vcJoinIco" style="margin-left:auto;font-size:12px;display:none;color:var(--grn)"></i>
-    </div>
-    <div class="vc-mems" id="vcMems"></div>
-  </div>
-  <div style="flex:1"></div>
-  <div class="vc-panel" id="vcPanel">
-    <div class="vc-status"><i class="fas fa-signal"></i> Voice Connected</div>
-    <div class="vc-lbl">General</div>
-    <div class="vc-ctrls">
-      <button class="vcbtn" id="vcMuteBtn" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
-      <button class="vcbtn" id="vcDeafBtn" onclick="toggleDeafen()"><i class="fas fa-headphones"></i></button>
-      <button class="vcbtn disc" onclick="leaveVC()"><i class="fas fa-phone-slash"></i></button>
-    </div>
-  </div>
-  <div class="user-panel">
-    <div class="uav-wrap" onclick="openProfileModal()">
-      <div class="uav" id="uav"></div>
-      <div class="sdot" id="usdot"></div>
-    </div>
-    <div class="uinfo">
-      <div class="uname" id="uname">Loading…</div>
-      <div class="utag" id="utag">online</div>
-    </div>
-    <div class="uctrl">
-      <button class="ucbtn" id="micBtn" title="Mute" onclick="toggleMic()" style="display:none"><i class="fas fa-microphone"></i></button>
-      <button class="ucbtn" id="deafBtn" title="Deafen" onclick="toggleDeafen()" style="display:none"><i class="fas fa-headphones"></i></button>
-      <button class="ucbtn" onclick="openProfileModal()" title="Settings"><i class="fas fa-cog"></i></button>
-    </div>
-  </div>
-</div>
-
-<!-- Chat -->
-<div class="chat">
-  <div class="chat-hdr">
-    <div class="chat-hdr-l">
-      <i class="fas fa-hashtag ch-ico"></i>
-      <span class="ch-nm" id="chName">general</span>
-      <div class="hdiv"></div>
-      <span class="ch-topic">Serverless P2P — pure WebRTC, no servers needed</span>
-    </div>
-    <div class="hdr-acts">
-      <div class="conn-badge"><div class="cdot" id="cdot"></div><span id="cLabel">Disconnected</span></div>
-      <div class="hdiv"></div>
-      <div id="roomPill" style="display:none" class="room-pill">
-        <i class="fas fa-key" style="color:var(--txt3);font-size:11px"></i>
-        <span class="rcode" id="rcode" title="Click to copy" onclick="copyCode()"></span>
-        <i class="fas fa-copy" style="color:var(--txt3);font-size:11px;cursor:pointer" onclick="copyCode()"></i>
-      </div>
-      <button class="hdrbtn" onclick="openSignalModal()" title="Connect / Signal"><i class="fas fa-plug"></i></button>
-      <button class="hdrbtn" onclick="disconnectAll()" title="Disconnect"><i class="fas fa-sign-out-alt"></i></button>
-    </div>
-  </div>
-
-  <div class="msgs" id="msgs">
-    <div class="welcome">
-      <div class="welcome-icon"><i class="fas fa-hashtag"></i></div>
-      <h2>Welcome to #general</h2>
-      <p>Click the <strong style="color:var(--txt1)"><i class="fas fa-plug"></i> plug icon</strong> in the top right to connect with a peer — no servers needed.</p>
-    </div>
-  </div>
-
-  <div class="typing-bar" id="typingBar"></div>
-
-  <div class="input-area">
-    <div class="inp-wrap">
-      <button class="ibtn" onclick="document.getElementById('fInput').click()" title="Attach File"><i class="fas fa-plus-circle"></i></button>
-      <textarea id="mInput" class="minput" placeholder="Message #general" rows="1"></textarea>
-      <button class="ibtn" id="gifBtn" title="GIF"><span style="font-size:11px;font-weight:700;letter-spacing:.5px">GIF</span></button>
-      <button class="ibtn" id="emojiBtn" title="Emoji"><i class="far fa-smile"></i></button>
-      <button class="ibtn send" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
-    </div>
-    <input type="file" id="fInput" style="display:none">
-  </div>
-</div>
-
-<!-- Members -->
-<div class="members">
-  <div class="msec-hdr">Online — <span id="onlineCt">1</span></div>
-  <div class="mitem" id="selfMitem" onclick="openViewProfile('me')">
-    <div class="mav-wrap"><div class="mav2" id="selfMav"></div><div class="sdot"></div></div>
-    <div class="minfo"><div class="mnm" id="selfMnm">You</div><div class="mstatus" id="selfMst"></div></div>
-  </div>
-  <div class="mitem" id="remMitem" style="display:none" onclick="openViewProfile('remote')">
-    <div class="mav-wrap"><div class="mav2" id="remMav"></div><div class="sdot" style="background:var(--grn)"></div></div>
-    <div class="minfo"><div class="mnm" id="remMnm">Peer</div><div class="mstatus" id="remMst"></div></div>
-  </div>
-  <div class="msec-hdr" style="margin-top:16px">Offline — <span id="offlineCt">0</span></div>
-</div>
-
-</div><!-- .app -->
-
-<!-- Pickers -->
-<div class="picker emoji-picker" id="emojiPicker">
-  <input class="esearch" id="esearch" placeholder="Search emoji…" oninput="filterEmoji(this.value)">
-  <div class="egrid" id="egrid"></div>
-</div>
-<div class="picker gif-picker" id="gifPicker">
-  <input class="gsearch" id="gsearch" placeholder="Search GIFs via Tenor…" oninput="debGif(this.value)">
-  <div class="gresults" id="gresults"><div style="color:var(--txt3);font-size:13px;text-align:center;padding:20px;grid-column:span 2">Type to search GIFs</div></div>
-  <div class="gif-attr">Powered by Tenor</div>
-</div>
-
-<div class="toasts" id="toasts"></div>
-<div class="lb" id="lb" onclick="this.classList.remove('open')"><img id="lbImg" alt=""></div>
-
-<!-- SIGNAL MODAL -->
-<div class="overlay" id="sigModal">
-  <div class="mcard sig-modal">
-    <div class="mhdr">
-      <h2><i class="fas fa-plug" style="color:var(--acc)"></i> Connect to Peer</h2>
-      <p>Pure WebRTC — no servers. Exchange signals manually (copy/paste via any messaging app).</p>
-    </div>
-    <div class="mbody">
-      <div class="sig-tabs">
-        <button class="sig-tab act" id="hostTabBtn" onclick="switchSigTab('host')">Create Room (Host)</button>
-        <button class="sig-tab" id="joinTabBtn" onclick="switchSigTab('join')">Join Room (Guest)</button>
-      </div>
-
-      <!-- HOST -->
-      <div id="hostTab">
-        <div id="hStep1">
-          <p class="sig-step"><strong>Step 1:</strong> Generate your offer and share it with your peer.</p>
-          <button class="mbtn pri" onclick="createOffer()"><i class="fas fa-magic"></i> Generate Offer</button>
-          <p class="sig-note">Send the offer to your friend via Discord DM, iMessage, email — anything works.</p>
+    <div class="container">
+        <h2>🔁 Serverless Static Proxy</h2>
+        <p>Enter a full URL and click <em>Go</em>. The target must allow CORS (<code>Access-Control-Allow-Origin</code>) for the HTML document.</p>
+        <form id="proxyForm" style="margin: 1rem 0;">
+            <input type="url" id="urlInput" placeholder="https://example.com" required />
+            <button type="submit">Go</button>
+        </form>
+        <div class="note">
+            <strong>Works with:</strong> sites that set <code>Access-Control-Allow-Origin: *</code>.<br>
+            <strong>No server needed</strong> – the Service Worker fetches and rewrites the HTML.
         </div>
-        <div id="hStep2" style="display:none">
-          <p class="sig-step"><strong>Step 2:</strong> Share this offer with your peer:</p>
-          <div style="display:flex;gap:8px;margin-bottom:6px">
-            <button class="copy-btn" onclick="copyText('offerOut')"><i class="fas fa-copy"></i> Copy Offer</button>
-          </div>
-          <textarea class="sig-box" id="offerOut" readonly rows="3"></textarea>
-          <p class="sig-step" style="margin-top:14px"><strong>Step 3:</strong> Paste their answer here once they send it back:</p>
-          <textarea class="sig-box" id="answerIn" placeholder="Paste the answer from your peer…" rows="3" oninput="checkAnswerReady()"></textarea>
-          <div id="answerStatus" style="margin-top:8px;display:none" class="sig-status"></div>
-          <button class="mbtn pri" id="connectAnswerBtn" style="margin-top:10px;display:none" onclick="connectWithAnswer()"><i class="fas fa-link"></i> Connect!</button>
-        </div>
-      </div>
-
-      <!-- JOIN -->
-      <div id="joinTab" style="display:none">
-        <p class="sig-step"><strong>Step 1:</strong> Paste the offer from the host:</p>
-        <textarea class="sig-box" id="offerIn" placeholder="Paste the host's offer here…" rows="3" oninput="checkOfferReady()"></textarea>
-        <div id="offerStatus" style="margin-top:8px;display:none" class="sig-status"></div>
-        <button class="mbtn pri" id="genAnswerBtn" style="margin-top:10px;display:none" onclick="generateAnswer()"><i class="fas fa-reply"></i> Generate Answer</button>
-        <div id="jStep2" style="display:none;margin-top:16px">
-          <p class="sig-step"><strong>Step 2:</strong> Send this answer back to the host:</p>
-          <div style="display:flex;gap:8px;margin-bottom:6px">
-            <button class="copy-btn" onclick="copyText('answerOut')"><i class="fas fa-copy"></i> Copy Answer</button>
-          </div>
-          <textarea class="sig-box" id="answerOut" readonly rows="3"></textarea>
-          <div class="sig-status" style="margin-top:10px"><i class="fas fa-hourglass-half"></i> Waiting for host to enter your answer — connection will open automatically.</div>
-        </div>
-      </div>
     </div>
-    <div class="mfoot"><button class="mbtn sec" onclick="closeModal('sigModal')">Close</button></div>
-  </div>
-</div>
 
-<!-- Edit Message Modal -->
-<div class="overlay" id="editModal">
-  <div class="mcard">
-    <div class="mhdr"><h2>Edit Message</h2></div>
-    <div class="mbody"><div class="fgrp"><label class="flbl">Content</label><textarea class="ftarea" id="editText" rows="3"></textarea></div></div>
-    <div class="mfoot"><button class="mbtn sec" onclick="closeModal('editModal')">Cancel</button><button class="mbtn pri" onclick="saveEdit()">Save Changes</button></div>
-  </div>
-</div>
+    <script>
+        // ---------- Register the Service Worker from a Blob ----------
+        const swCode = `
+// Service Worker for client-side proxying
+self.addEventListener('install', event => {
+    self.skipWaiting();
+});
+self.addEventListener('activate', event => {
+    event.waitUntil(clients.claim());
+});
 
-<!-- Profile Modal -->
-<div class="overlay" id="profileModal">
-  <div class="mcard">
-    <div class="pbanner" id="pBanner">
-      <div class="pav-edit" id="pAvEdit" onclick="document.getElementById('avFile').click()">
-        <div class="pav-ov"><i class="fas fa-camera"></i><span style="font-size:10px">Change</span></div>
-      </div>
-    </div>
-    <div class="pbody">
-      <div class="fgrp"><label class="flbl">Display Name</label><input class="finput" id="eUname" type="text" maxlength="32" placeholder="Your name"></div>
-      <div class="fgrp"><label class="flbl">About Me</label><textarea class="ftarea" id="eBio" rows="3" maxlength="190" placeholder="Tell people about yourself…"></textarea></div>
-      <div class="fgrp"><label class="flbl">Custom Status</label><input class="finput" id="eSt" type="text" maxlength="128" placeholder="What are you up to?"></div>
-      <div class="fgrp">
-        <label class="flbl">Banner Color</label>
-        <div class="swatches" id="swatches">
-          <div class="sw" style="background:#5865f2" onclick="setBanner('#5865f2',this)"></div>
-          <div class="sw" style="background:#eb459e" onclick="setBanner('#eb459e',this)"></div>
-          <div class="sw" style="background:#ed4245" onclick="setBanner('#ed4245',this)"></div>
-          <div class="sw" style="background:#fee75c" onclick="setBanner('#fee75c',this)"></div>
-          <div class="sw" style="background:#57f287" onclick="setBanner('#57f287',this)"></div>
-          <div class="sw" style="background:#1abc9c" onclick="setBanner('#1abc9c',this)"></div>
-          <div class="sw" style="background:#ff6b35" onclick="setBanner('#ff6b35',this)"></div>
-          <input type="color" title="Custom" style="width:28px;height:28px;border-radius:50%;border:none;padding:0;cursor:pointer;background:none;flex-shrink:0" oninput="setBanner(this.value,this)">
-        </div>
-      </div>
-      <input type="file" id="avFile" accept="image/*,image/gif" style="display:none" onchange="handleAvatar(event)">
-    </div>
-    <div class="mfoot"><button class="mbtn sec" onclick="closeModal('profileModal')">Cancel</button><button class="mbtn pri" onclick="saveProfile()">Save Changes</button></div>
-  </div>
-</div>
+self.addEventListener('fetch', event => {
+    const url = new URL(event.request.url);
 
-<!-- View Profile Modal -->
-<div class="overlay" id="viewModal" onclick="if(event.target===this)closeModal('viewModal')">
-  <div class="vcard">
-    <div class="vbanner" id="vBanner"></div>
-    <div class="vinner">
-      <div class="vav-row"><div class="vav" id="vAv"></div></div>
-      <div class="vnm" id="vNm"></div>
-      <div class="vcst" id="vCSt"></div>
-      <div class="vdiv"></div>
-      <div class="vsec">About Me</div>
-      <div class="vbio" id="vBio">No bio set.</div>
-    </div>
-  </div>
-</div>
+    // Intercept navigation to our proxy: ?url=<encoded target>
+    if (event.request.mode === 'navigate' && url.searchParams.has('url')) {
+        event.respondWith(proxyNavigation(url.searchParams.get('url')));
+        return;
+    }
 
-<audio id="remAudio" autoplay style="display:none"></audio>
+    // No other requests handled – sub-resources load directly from the target server
+});
 
-<script>
-'use strict';
+async function proxyNavigation(targetUrl) {
+    try {
+        // Fetch the HTML from the target (requires CORS)
+        const response = await fetch(targetUrl, { mode: 'cors', redirect: 'follow' });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
 
-// ── STATE ──────────────────────────────────
-let pc = null, dc = null, connected = false;
-let localStream = null, isInVC = false, isMuted = false, isDeafened = false;
-let messages = [], nextId = 1, editTarget = null;
-let typingTimer = null, lastTypeSent = 0, gifTimer = null;
-let lastMsgDate = null;
+        const html = await response.text();
+        const finalBase = response.url; // after redirects
 
-const TENOR_KEY = 'AIzaSyAyimkuYQYF_FXVALexPzFsI5wRSAWtU9k';
+        // Rewrite relative URLs to absolute so sub-resources load directly from target
+        const rewrittenHtml = makeAbsoluteUrls(html, finalBase);
 
-let me = { username:'User'+(Math.random()*8999+1000|0), bio:'', customStatus:'', bannerColor:'#5865f2', avatarURL:'' };
-let remote = { username:'Peer', bio:'', customStatus:'', bannerColor:'#5865f2', avatarURL:'' };
-
-const ICE_CFG = { iceServers:[
-  {urls:'stun:stun.l.google.com:19302'},
-  {urls:'stun:stun1.l.google.com:19302'}
-]};
-
-// ── UTILS ──────────────────────────────────
-const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const fmtBytes = b => { if(!b) return '0 B'; const u=['B','KB','MB','GB'],i=Math.floor(Math.log(b)/Math.log(1024)); return (b/1024**i).toFixed(1)+' '+u[i]; };
-const fmtTime = ts => new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-const fmtDate = ts => { const d=new Date(ts),n=new Date(),df=(n-d)/864e5; return df<1?'Today at '+fmtTime(ts):df<2?'Yesterday at '+fmtTime(ts):d.toLocaleDateString()+' '+fmtTime(ts); };
-
-function showToast(msg, type='info', dur=3000) {
-  const c = document.getElementById('toasts');
-  const el = document.createElement('div');
-  el.className = 'toast'+(type==='ok'?' ok':type==='err'?' err':type==='warn'?' warn':'');
-  const ic = {ok:'fa-check-circle',err:'fa-exclamation-circle',warn:'fa-exclamation-triangle',info:'fa-info-circle'};
-  const cl = {ok:'var(--grn)',err:'var(--red)',warn:'var(--ylw)',info:'var(--acc)'};
-  el.innerHTML = `<i class="fas ${ic[type]||'fa-info-circle'}" style="color:${cl[type]||cl.info}"></i><span>${esc(msg)}</span>`;
-  c.appendChild(el);
-  setTimeout(() => { el.style.animation='sout .2s ease-in forwards'; setTimeout(()=>el.remove(),200); }, dur);
+        return new Response(rewrittenHtml, {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        });
+    } catch (err) {
+        return new Response(
+            \`<h2>Proxy Error</h2><p>CORS may be blocking the request, or the URL is invalid.</p><p><code>\${err.toString()}</code></p>\`,
+            { status: 502, headers: { 'Content-Type': 'text/html' } }
+        );
+    }
 }
 
-function playSound(type) {
-  try {
-    const ctx = new(window.AudioContext||window.webkitAudioContext)();
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination); o.type='sine';
-    o.frequency.value = type==='mention'?660:type==='join'?550:880;
-    g.gain.value=.12; o.start();
-    g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.4);
-    o.stop(ctx.currentTime+.35); ctx.resume();
-  } catch(e){}
-}
+/**
+ * Naive but effective URL rewriter.
+ * Converts src, href, action, srcset attributes to absolute URLs.
+ */
+function makeAbsoluteUrls(html, base) {
+    // Attributes whose values might be URLs
+    const attrs = ['src', 'href', 'action', 'srcset'];
+    const baseUrl = new URL(base);
 
-function copyText(id) {
-  const v = document.getElementById(id).value;
-  navigator.clipboard.writeText(v).then(()=>showToast('Copied to clipboard!','ok',1500)).catch(()=>{
-    // Fallback
-    const el = document.getElementById(id); el.select(); document.execCommand('copy');
-    showToast('Copied!','ok',1500);
-  });
-}
+    // Helper to make a URL absolute (if not already)
+    function absolutify(raw) {
+        if (!raw || raw.startsWith('data:') || raw.startsWith('blob:') || raw.startsWith('javascript:') || raw.startsWith('#')) return raw;
+        try {
+            return new URL(raw, baseUrl).href;
+        } catch (e) {
+            return raw;
+        }
+    }
 
-function copyCode() {
-  const v = document.getElementById('rcode').textContent;
-  navigator.clipboard.writeText(v).then(()=>showToast('Code copied!','ok',1500));
-}
-
-// ── PROFILE ────────────────────────────────
-function loadProfile() {
-  try { const s=localStorage.getItem('dscrd_me2'); if(s) me={...me,...JSON.parse(s)}; } catch(e){}
-  renderSelf();
-}
-function saveProfileData() { try { localStorage.setItem('dscrd_me2',JSON.stringify(me)); } catch(e){} }
-
-function setAvEl(el, p) {
-  if(p.avatarURL) { el.style.backgroundImage=`url('${p.avatarURL}')`;el.style.backgroundSize='cover';el.style.backgroundColor='transparent';el.innerHTML=''; }
-  else { el.style.backgroundImage='';el.style.background='#5865f2';el.textContent=(p.username||'?').charAt(0).toUpperCase(); }
-}
-
-function renderSelf() {
-  document.getElementById('uname').textContent = me.username;
-  document.getElementById('utag').textContent = me.customStatus || 'online';
-  document.getElementById('selfMnm').textContent = me.username;
-  document.getElementById('selfMst').textContent = me.customStatus;
-  setAvEl(document.getElementById('uav'), me);
-  setAvEl(document.getElementById('selfMav'), me);
-}
-
-function renderRemote() {
-  document.getElementById('remMnm').textContent = remote.username;
-  document.getElementById('remMst').textContent = remote.customStatus || 'Online';
-  setAvEl(document.getElementById('remMav'), remote);
-  rebuildMsgs();
-}
-
-function openProfileModal() {
-  document.getElementById('eUname').value = me.username;
-  document.getElementById('eBio').value = me.bio||'';
-  document.getElementById('eSt').value = me.customStatus||'';
-  document.getElementById('pBanner').style.background = me.bannerColor||'#5865f2';
-  setAvEl(document.getElementById('pAvEdit'), me);
-  openModal('profileModal');
-}
-
-function setBanner(c, el) {
-  me.bannerColor = c;
-  document.getElementById('pBanner').style.background = c;
-  document.querySelectorAll('.sw').forEach(s=>s.classList.remove('sel'));
-  if(el && el.classList) el.classList.add('sel');
-}
-
-function handleAvatar(e) {
-  const f = e.target.files[0]; if(!f) return;
-  if(!f.type.startsWith('image/')) { showToast('Select an image file','err'); return; }
-  if(f.size > 10*1024*1024) { showToast('Max 10MB','err'); return; }
-  const r = new FileReader();
-  r.onload = ev => { me.avatarURL=ev.target.result; setAvEl(document.getElementById('pAvEdit'),me); renderSelf(); };
-  r.readAsDataURL(f);
-}
-
-function saveProfile() {
-  const n = document.getElementById('eUname').value.trim();
-  if(!n) { showToast('Name required','err'); return; }
-  me.username=n; me.bio=document.getElementById('eBio').value.trim(); me.customStatus=document.getElementById('eSt').value.trim();
-  saveProfileData(); renderSelf(); closeModal('profileModal'); showToast('Profile saved!','ok');
-  if(connected) send({type:'profile',...me});
-}
-
-function openViewProfile(who) {
-  const p = who==='remote' ? remote : me;
-  document.getElementById('vBanner').style.background = p.bannerColor||'linear-gradient(135deg,#5865f2,#7289da)';
-  setAvEl(document.getElementById('vAv'), p);
-  document.getElementById('vNm').textContent = p.username;
-  document.getElementById('vCSt').textContent = p.customStatus||'';
-  document.getElementById('vBio').textContent = p.bio||'No bio set.';
-  openModal('viewModal');
-}
-
-// ── MODALS ─────────────────────────────────
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-// ── EMOJI ──────────────────────────────────
-const EMOJIS = ['😀','😂','😍','🥺','😎','🤔','😭','🥳','😅','😤','🤯','🫡','💀','🙏','👀','✨','🔥','💯','❤️','🎉','👍','👎','💪','🤝','🫂','🍕','🎮','🎶','⭐','🚀','🌊','🌙','☀️','🌈','💎','🏆','🎯','🎲','🦋','🐱','🐶','🐸','🦊','🦁'];
-
-function initEmoji() {
-  const g = document.getElementById('egrid');
-  EMOJIS.forEach(e => { const s=document.createElement('span'); s.textContent=e; s.onclick=()=>insertEmoji(e); g.appendChild(s); });
-}
-function insertEmoji(e) { const i=document.getElementById('mInput'); i.value+=e; i.focus(); hideEmoji(); }
-function hideEmoji() { document.getElementById('emojiPicker').style.display='none'; }
-function toggleEmoji(btn) {
-  const p = document.getElementById('emojiPicker');
-  if(p.style.display==='block') { hideEmoji(); return; }
-  const r = btn.getBoundingClientRect();
-  p.style.display='block';
-  p.style.bottom = (window.innerHeight-r.top+8)+'px';
-  p.style.left = Math.min(r.left, window.innerWidth-310)+'px';
-  document.getElementById('esearch').value=''; filterEmoji('');
-}
-function filterEmoji(q) { document.getElementById('egrid').querySelectorAll('span').forEach(s=>{ s.style.display=!q||s.textContent.includes(q)?'':'none'; }); }
-
-// ── GIF (TENOR) ────────────────────────────
-function toggleGif(btn) {
-  const p = document.getElementById('gifPicker');
-  if(p.style.display==='block') { p.style.display='none'; return; }
-  const r = btn.getBoundingClientRect();
-  p.style.display='block';
-  p.style.bottom = (window.innerHeight-r.top+8)+'px';
-  p.style.left = Math.max(0,Math.min(r.left-80,window.innerWidth-330))+'px';
-}
-function debGif(q) { clearTimeout(gifTimer); if(!q) return; gifTimer=setTimeout(()=>searchGif(q),450); }
-async function searchGif(q) {
-  const r = document.getElementById('gresults');
-  r.innerHTML = '<div style="color:var(--txt3);font-size:13px;text-align:center;padding:20px;grid-column:span 2"><i class="fas fa-spinner fa-spin"></i> Searching…</div>';
-  try {
-    const res = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}&key=${TENOR_KEY}&limit=12&media_filter=gif,tinygif`);
-    if(!res.ok) throw new Error('Tenor error '+res.status);
-    const data = await res.json();
-    r.innerHTML = '';
-    if(!data.results?.length) { r.innerHTML='<div style="color:var(--txt3);font-size:13px;text-align:center;padding:20px;grid-column:span 2">No results found</div>'; return; }
-    data.results.forEach(g => {
-      const preview = g.media_formats?.tinygif?.url || g.media_formats?.gif?.url;
-      const full = g.media_formats?.gif?.url || preview;
-      if(!preview) return;
-      const img = document.createElement('img'); img.src=preview; img.loading='lazy';
-      img.onclick = () => { sendGif(full); document.getElementById('gifPicker').style.display='none'; };
-      r.appendChild(img);
+    // Process single and double quoted attributes
+    attrs.forEach(attr => {
+        const regex = new RegExp(\`(\${attr}\s*=\\s*")([^"]*)("\`, 'g);
+        html = html.replace(regex, (match, p1, p2, p3) => p1 + absolutify(p2) + p3);
+        const regexSingle = new RegExp(\`(\${attr}\s*=\\s*')([^']*)('\`, 'g);
+        html = html.replace(regexSingle, (match, p1, p2, p3) => p1 + absolutify(p2) + p3);
     });
-  } catch(e) {
-    r.innerHTML = '<div style="color:var(--red);font-size:13px;text-align:center;padding:20px;grid-column:span 2">Failed to load GIFs</div>';
-  }
+
+    // Also try to set a <base> tag in case we missed anything
+    // but injecting base could break absolute links, so we skip it.
+    return html;
 }
+`;
 
-// ── WEBRTC SIGNALING ───────────────────────
-function switchSigTab(tab) {
-  document.getElementById('hostTabBtn').classList.toggle('act', tab==='host');
-  document.getElementById('joinTabBtn').classList.toggle('act', tab==='join');
-  document.getElementById('hostTab').style.display = tab==='host'?'':'none';
-  document.getElementById('joinTab').style.display = tab==='join'?'':'none';
-}
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
 
-function openSignalModal() {
-  if(connected) { showToast('Already connected — disconnect first','warn'); return; }
-  resetSigUI();
-  openModal('sigModal');
-}
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl, { scope: '/' })
+                .then(reg => console.log('Service Worker registered', reg))
+                .catch(err => console.error('SW registration failed:', err));
+        } else {
+            alert('Service Worker not supported. This proxy requires a modern browser with HTTPS or localhost.');
+        }
 
-function resetSigUI() {
-  document.getElementById('hStep1').style.display='';
-  document.getElementById('hStep2').style.display='none';
-  document.getElementById('offerOut').value='';
-  document.getElementById('answerIn').value='';
-  document.getElementById('answerStatus').style.display='none';
-  document.getElementById('connectAnswerBtn').style.display='none';
-  document.getElementById('offerIn').value='';
-  document.getElementById('offerStatus').style.display='none';
-  document.getElementById('genAnswerBtn').style.display='none';
-  document.getElementById('jStep2').style.display='none';
-  document.getElementById('answerOut').value='';
-  switchSigTab('host');
-}
+        // ---------- UI logic ----------
+        const form = document.getElementById('proxyForm');
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            const input = document.getElementById('urlInput').value.trim();
+            if (!input) return;
+            const encoded = encodeURIComponent(input);
+            // Navigate to ourselves with the ?url= parameter
+            window.location.href = window.location.origin + window.location.pathname + '?url=' + encoded;
+        });
 
-function makePeerConnection() {
-  if(pc) { try{pc.close();}catch(e){} pc=null; }
-  pc = new RTCPeerConnection(ICE_CFG);
-  pc.onconnectionstatechange = () => {
-    const s = pc.connectionState;
-    if(s==='connected') onPeerConnected();
-    else if(s==='disconnected'||s==='failed'||s==='closed') onPeerDisconnected();
-  };
-  pc.ontrack = e => {
-    const audio = document.getElementById('remAudio');
-    audio.srcObject = e.streams[0];
-  };
-  return pc;
-}
-
-function waitGathering(myPc) {
-  return new Promise(res => {
-    if(myPc.iceGatheringState === 'complete') { res(); return; }
-    const check = () => { if(myPc.iceGatheringState==='complete') { myPc.removeEventListener('icegatheringstatechange',check); res(); } };
-    myPc.addEventListener('icegatheringstatechange', check);
-    setTimeout(res, 6000); // timeout fallback
-  });
-}
-
-function encodeSignal(sdp, type) { return btoa(JSON.stringify({sdp,type})); }
-function decodeSignal(b64) { return JSON.parse(atob(b64.trim())); }
-
-// HOST: create offer
-async function createOffer() {
-  makePeerConnection();
-  dc = pc.createDataChannel('chat', {ordered:true});
-  setupDC();
-  try {
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await waitGathering(pc);
-    document.getElementById('offerOut').value = encodeSignal(pc.localDescription.sdp, pc.localDescription.type);
-    document.getElementById('hStep1').style.display='none';
-    document.getElementById('hStep2').style.display='';
-  } catch(e) { showToast('Error: '+e.message,'err'); }
-}
-
-function checkAnswerReady() {
-  const v = document.getElementById('answerIn').value.trim();
-  document.getElementById('connectAnswerBtn').style.display = v ? '' : 'none';
-}
-
-async function connectWithAnswer() {
-  const raw = document.getElementById('answerIn').value.trim();
-  const st = document.getElementById('answerStatus');
-  st.style.display='flex'; st.className='sig-status';
-  st.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing answer…';
-  try {
-    const { sdp, type } = decodeSignal(raw);
-    await pc.setRemoteDescription(new RTCSessionDescription({sdp,type}));
-    st.className='sig-status ok';
-    st.innerHTML='<i class="fas fa-check-circle"></i> Answer applied — connecting now…';
-    document.getElementById('connectAnswerBtn').style.display='none';
-  } catch(e) {
-    st.className='sig-status err';
-    st.innerHTML='<i class="fas fa-exclamation-circle"></i> Invalid answer. Make sure you pasted the full text.';
-  }
-}
-
-function checkOfferReady() {
-  const v = document.getElementById('offerIn').value.trim();
-  const st = document.getElementById('offerStatus');
-  if(!v) { st.style.display='none'; document.getElementById('genAnswerBtn').style.display='none'; return; }
-  try {
-    decodeSignal(v);
-    st.style.display='flex'; st.className='sig-status ok';
-    st.innerHTML='<i class="fas fa-check-circle"></i> Valid offer detected.';
-    document.getElementById('genAnswerBtn').style.display='';
-  } catch(e) {
-    st.style.display='flex'; st.className='sig-status err';
-    st.innerHTML='<i class="fas fa-exclamation-circle"></i> Invalid offer — make sure you copied the full text.';
-    document.getElementById('genAnswerBtn').style.display='none';
-  }
-}
-
-// GUEST: generate answer
-async function generateAnswer() {
-  makePeerConnection();
-  pc.ondatachannel = e => { dc=e.channel; setupDC(); };
-  const raw = document.getElementById('offerIn').value.trim();
-  try {
-    const { sdp, type } = decodeSignal(raw);
-    await pc.setRemoteDescription(new RTCSessionDescription({sdp,type}));
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    await waitGathering(pc);
-    document.getElementById('answerOut').value = encodeSignal(pc.localDescription.sdp, pc.localDescription.type);
-    document.getElementById('jStep2').style.display='';
-  } catch(e) { showToast('Error: '+e.message,'err'); }
-}
-
-// ── DATA CHANNEL ───────────────────────────
-function setupDC() {
-  dc.onopen = () => onPeerConnected();
-  dc.onclose = () => onPeerDisconnected();
-  dc.onerror = e => console.warn('DC error',e);
-  dc.onmessage = e => { try { handleMsg(JSON.parse(e.data)); } catch(err){ console.warn('Bad msg',err); } };
-}
-
-function send(data) {
-  if(dc && dc.readyState==='open') { try { dc.send(JSON.stringify(data)); return true; } catch(e){} }
-  return false;
-}
-
-// ── CONNECTION EVENTS ──────────────────────
-function onPeerConnected() {
-  if(connected) return;
-  connected = true;
-  setConnUI('on','Connected');
-  closeModal('sigModal');
-  addSys('🟢 Peer connected!');
-  showToast('Connected!','ok');
-  playSound('join');
-  document.getElementById('remMitem').style.display='flex';
-  document.getElementById('onlineCt').textContent='2';
-  document.getElementById('offlineCt').textContent='0';
-  document.getElementById('vcJoinIco').style.display='';
-  const code = Math.random().toString(36).slice(2,8).toUpperCase();
-  document.getElementById('rcode').textContent=code;
-  document.getElementById('roomPill').style.display='flex';
-  loadHistory();
-  setTimeout(()=>send({type:'profile',...me}), 200);
-}
-
-function onPeerDisconnected() {
-  if(!connected) return;
-  connected=false;
-  setConnUI('off','Disconnected');
-  addSys('🔴 Peer disconnected');
-  showToast('Peer disconnected','warn');
-  document.getElementById('remMitem').style.display='none';
-  document.getElementById('onlineCt').textContent='1';
-  document.getElementById('offlineCt').textContent='1';
-  document.getElementById('vcJoinIco').style.display='none';
-  document.getElementById('roomPill').style.display='none';
-  remote = {username:'Peer',bio:'',customStatus:'',bannerColor:'#5865f2',avatarURL:''};
-  if(isInVC) leaveVC();
-}
-
-function disconnectAll() {
-  if(dc) { try{dc.close();}catch(e){} dc=null; }
-  if(pc) { try{pc.close();}catch(e){} pc=null; }
-  if(localStream) { localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
-  onPeerDisconnected();
-  showToast('Disconnected','info');
-}
-
-function setConnUI(state, label) {
-  document.getElementById('cdot').className='cdot'+(state==='on'?' on':state==='blink'?' blink':'');
-  document.getElementById('cLabel').textContent=label;
-}
-
-// ── INCOMING MESSAGES ──────────────────────
-function handleMsg(msg) {
-  switch(msg.type) {
-    case 'profile':
-      remote.username = msg.username||'Peer';
-      remote.bio = msg.bio||'';
-      remote.customStatus = msg.customStatus||'';
-      remote.bannerColor = msg.bannerColor||'#5865f2';
-      remote.avatarURL = msg.avatarURL||'';
-      renderRemote();
-      break;
-    case 'chat': {
-      const { sub, msgId, content, gifUrl, fileName, fileSize, fileDataURL, fileType, timestamp } = msg;
-      let m;
-      if(sub==='text') m={id:msgId,type:'text',content,from:'remote',timestamp,reactions:{},edited:false};
-      else if(sub==='gif') m={id:msgId,type:'gif',gifUrl,from:'remote',timestamp,reactions:{},edited:false};
-      else if(sub==='file') m={id:msgId,type:'file',fileName,fileSize,fileDataURL,fileType,from:'remote',timestamp,reactions:{},edited:false};
-      if(m) { messages.push(m); appendMsgEl(m); scrollBottom(); saveHistory(); }
-      if(sub==='text'&&content.includes('@'+me.username)) playSound('mention'); else playSound('msg');
-      break;
-    }
-    case 'reaction': {
-      const rm = messages.find(m=>m.id===msg.msgId);
-      if(rm) { if(!rm.reactions[msg.emoji])rm.reactions[msg.emoji]=[]; const i=rm.reactions[msg.emoji].indexOf(msg.user); if(msg.add&&i===-1)rm.reactions[msg.emoji].push(msg.user); else if(!msg.add&&i!==-1)rm.reactions[msg.emoji].splice(i,1); if(!rm.reactions[msg.emoji].length)delete rm.reactions[msg.emoji]; updateRxns(msg.msgId); }
-      break;
-    }
-    case 'edit': {
-      const em = messages.find(m=>m.id===msg.msgId);
-      if(em) { em.content=msg.newContent; em.edited=true; const el=document.querySelector(`.msg[data-id="${msg.msgId}"] .mtext`); if(el)el.innerHTML=fmtText(em.content)+'<span class="medit">(edited)</span>'; }
-      break;
-    }
-    case 'delete': {
-      const di = messages.findIndex(m=>m.id===msg.msgId);
-      if(di!==-1) { messages.splice(di,1); rebuildMsgs(); }
-      break;
-    }
-    case 'typing': {
-      const tb = document.getElementById('typingBar');
-      tb.innerHTML=`<div class="tdots"><span></span><span></span><span></span></div><span>${esc(remote.username)} is typing…</span>`;
-      clearTimeout(typingTimer); typingTimer=setTimeout(()=>tb.innerHTML='',3000);
-      break;
-    }
-  }
-}
-
-// ── SENDING ────────────────────────────────
-function sendText() {
-  const inp = document.getElementById('mInput');
-  const text = inp.value.trim(); if(!text) return;
-  if(!connected) { showToast('Not connected — use the plug icon to connect','warn'); return; }
-  inp.value=''; autoResize(inp);
-  const id=nextId++, ts=Date.now();
-  const m={id,type:'text',content:text,from:'me',timestamp:ts,reactions:{},edited:false};
-  messages.push(m); appendMsgEl(m); scrollBottom(); saveHistory();
-  send({type:'chat',sub:'text',msgId:id,content:text,timestamp:ts});
-}
-
-function sendGif(url) {
-  if(!connected) { showToast('Not connected','warn'); return; }
-  const id=nextId++, ts=Date.now();
-  const m={id,type:'gif',gifUrl:url,from:'me',timestamp:ts,reactions:{},edited:false};
-  messages.push(m); appendMsgEl(m); scrollBottom(); saveHistory();
-  send({type:'chat',sub:'gif',msgId:id,gifUrl:url,timestamp:ts});
-}
-
-function sendFile(file) {
-  if(!connected) { showToast('Not connected','warn'); return; }
-  if(file.size>25*1024*1024) { showToast('Max 25MB per file','err'); return; }
-  showToast('Sending file…','info',2000);
-  const r=new FileReader();
-  r.onload=e=>{
-    const id=nextId++, ts=Date.now();
-    const m={id,type:'file',fileName:file.name,fileSize:file.size,fileDataURL:e.target.result,fileType:file.type,from:'me',timestamp:ts,reactions:{},edited:false};
-    messages.push(m); appendMsgEl(m); scrollBottom(); saveHistory();
-    send({type:'chat',sub:'file',msgId:id,fileName:file.name,fileSize:file.size,fileDataURL:e.target.result,fileType:file.type,timestamp:ts});
-  };
-  r.readAsDataURL(file);
-}
-
-function onTyping() {
-  if(!connected) return;
-  const now=Date.now();
-  if(now-lastTypeSent>2000) { send({type:'typing'}); lastTypeSent=now; }
-}
-
-// ── RENDER ─────────────────────────────────
-function addSys(text) {
-  const m={id:nextId++,type:'system',content:text,from:'system',timestamp:Date.now()};
-  messages.push(m); appendMsgEl(m); scrollBottom();
-}
-
-function rebuildMsgs() {
-  const c = document.getElementById('msgs');
-  c.innerHTML='<div class="welcome"><div class="welcome-icon"><i class="fas fa-hashtag"></i></div><h2>Welcome to #general</h2><p>Click the <strong style="color:var(--txt1)"><i class="fas fa-plug"></i> plug icon</strong> to connect.</p></div>';
-  lastMsgDate=null;
-  messages.forEach(m=>appendMsgEl(m));
-  scrollBottom();
-}
-
-function appendMsgEl(msg) {
-  const c = document.getElementById('msgs');
-  if(msg.type==='system') {
-    const d=document.createElement('div'); d.className='sysmsg'; d.dataset.id=msg.id;
-    d.innerHTML=`<i class="fas fa-info-circle"></i><span>${esc(msg.content)}</span>`;
-    c.appendChild(d); return;
-  }
-  // Date divider
-  const md = new Date(msg.timestamp).toDateString();
-  if(md!==lastMsgDate) {
-    const div=document.createElement('div'); div.className='divider';
-    div.innerHTML=`<span>${new Date(msg.timestamp).toLocaleDateString([],{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</span>`;
-    c.appendChild(div); lastMsgDate=md;
-  }
-  // Compact (group messages within 5 min from same sender)
-  const prev = messages[messages.indexOf(msg)-1];
-  const compact = prev && prev.from===msg.from && msg.timestamp-prev.timestamp < 5*60000 && prev.type!=='system';
-  const isMe = msg.from==='me';
-  const p = isMe ? me : remote;
-
-  const avStyle = p.avatarURL
-    ? `background-image:url('${p.avatarURL}');background-size:cover;background-color:transparent`
-    : `background:#5865f2`;
-  const avInner = p.avatarURL ? '' : esc(p.username.charAt(0).toUpperCase());
-
-  const el = document.createElement('div');
-  el.className = 'msg'+(compact?' compact':''); el.dataset.id=msg.id;
-
-  // Body
-  let body = '';
-  if(msg.type==='text') body=`<div class="mtext">${fmtText(msg.content)}${msg.edited?'<span class="medit">(edited)</span>':''}</div>`;
-  else if(msg.type==='gif') body=`<div class="mprev"><img src="${esc(msg.gifUrl)}" alt="GIF" onclick="openLB(this.src)"></div>`;
-  else if(msg.type==='file') {
-    if(msg.fileType?.startsWith('image/')) body=`<div class="mprev"><img src="${msg.fileDataURL}" alt="${esc(msg.fileName)}" onclick="openLB(this.src)"></div>`;
-    else if(msg.fileType?.startsWith('audio/')) body=`<div class="mprev"><audio controls src="${msg.fileDataURL}"></audio></div>`;
-    else if(msg.fileType?.startsWith('video/')) body=`<div class="mprev"><video controls src="${msg.fileDataURL}"></video></div>`;
-    else body=`<div class="fattach" onclick="dlFile('${msg.fileDataURL}','${esc(msg.fileName)}')"><div class="fico"><i class="fas fa-file"></i></div><div><div class="fnm">${esc(msg.fileName)}</div><div class="fsz">${fmtBytes(msg.fileSize)}</div></div><i class="fas fa-download" style="color:var(--txt3);margin-left:auto"></i></div>`;
-  }
-
-  // Actions
-  const acts = isMe
-    ? `<div class="macts"><button class="mabtn" title="React" onclick="showRxnPicker(${msg.id},this)"><i class="fas fa-smile-beam"></i></button><button class="mabtn" title="Edit" onclick="openEdit(${msg.id})"><i class="fas fa-edit"></i></button><button class="mabtn danger" title="Delete" onclick="delMsg(${msg.id})"><i class="fas fa-trash-alt"></i></button></div>`
-    : `<div class="macts"><button class="mabtn" title="React" onclick="showRxnPicker(${msg.id},this)"><i class="fas fa-smile-beam"></i></button></div>`;
-
-  el.innerHTML=`
-    <div class="av-col">
-      <div class="mav" onclick="openViewProfile('${isMe?'me':'remote'}')" style="${avStyle}">${avInner}</div>
-    </div>
-    <div class="mcont">
-      ${compact
-        ? `<span class="ts-side">${fmtTime(msg.timestamp)}</span>`
-        : `<div class="mhdr"><span class="muser" onclick="openViewProfile('${isMe?'me':'remote'}')">${esc(p.username)}</span><span class="mts">${fmtDate(msg.timestamp)}</span></div>`
-      }
-      ${body}
-      <div class="rxns" id="rxns_${msg.id}"></div>
-    </div>
-    ${acts}`;
-  c.appendChild(el);
-  updateRxns(msg.id);
-}
-
-function fmtText(t) {
-  let s = esc(t);
-  s = s.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
-  s = s.replace(/\*(.*?)\*/g,'<em>$1</em>');
-  s = s.replace(/~~(.*?)~~/g,'<del>$1</del>');
-  s = s.replace(/`(.*?)`/g,'<code>$1</code>');
-  s = s.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
-  s = s.replace(/@([A-Za-z0-9_]+)/g,(m,n)=>`<span class="mention">@${esc(n)}</span>`);
-  return s;
-}
-
-function updateRxns(id) {
-  const el = document.getElementById('rxns_'+id); if(!el) return;
-  const msg = messages.find(m=>m.id===id); if(!msg) return;
-  el.innerHTML='';
-  Object.entries(msg.reactions||{}).forEach(([emoji,users])=>{
-    const s=document.createElement('span'); const mine=users.includes(me.username);
-    s.className='rxn'+(mine?' mine':'');
-    s.innerHTML=`${emoji} <strong>${users.length}</strong>`;
-    s.title=users.join(', '); s.onclick=()=>toggleRxn(id,emoji); el.appendChild(s);
-  });
-  const add=document.createElement('span'); add.className='rxn rxn-add';
-  add.innerHTML='<i class="far fa-smile"></i>';
-  add.onclick=e=>showRxnPicker(id,e.currentTarget); el.appendChild(add);
-}
-
-function toggleRxn(msgId, emoji) {
-  const msg = messages.find(m=>m.id===msgId); if(!msg) return;
-  if(!msg.reactions[emoji]) msg.reactions[emoji]=[];
-  const i = msg.reactions[emoji].indexOf(me.username);
-  if(i===-1) msg.reactions[emoji].push(me.username); else msg.reactions[emoji].splice(i,1);
-  if(!msg.reactions[emoji].length) delete msg.reactions[emoji];
-  updateRxns(msgId);
-  send({type:'reaction',msgId,emoji,user:me.username,add:i===-1});
-}
-
-function showRxnPicker(msgId, btn) {
-  const ex=document.getElementById('rp_'+msgId); if(ex){ex.remove();return;}
-  const p=document.createElement('div'); p.id='rp_'+msgId;
-  p.style.cssText='position:absolute;z-index:100;background:var(--bg2);border-radius:12px;padding:8px;display:flex;gap:6px;flex-wrap:wrap;width:220px;box-shadow:0 8px 24px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08)';
-  ['👍','❤️','😂','😮','😢','🎉','🔥','💯'].forEach(e=>{
-    const s=document.createElement('span'); s.textContent=e;
-    s.style.cssText='font-size:22px;cursor:pointer;padding:4px;border-radius:6px;transition:.1s';
-    s.onmouseenter=()=>s.style.background='rgba(255,255,255,.1)';
-    s.onmouseleave=()=>s.style.background='';
-    s.onclick=()=>{toggleRxn(msgId,e);p.remove();};
-    p.appendChild(s);
-  });
-  btn.parentElement.style.position='relative';
-  btn.parentElement.appendChild(p);
-  setTimeout(()=>document.addEventListener('click',function h(ev){if(!p.contains(ev.target)){p.remove();document.removeEventListener('click',h);}},{once:false}),50);
-}
-
-function openEdit(id) {
-  const msg = messages.find(m=>m.id===id); if(!msg) return;
-  editTarget=msg; document.getElementById('editText').value=msg.content; openModal('editModal');
-}
-function saveEdit() {
-  if(!editTarget) return;
-  const t=document.getElementById('editText').value.trim();
-  if(t&&t!==editTarget.content) {
-    editTarget.content=t; editTarget.edited=true;
-    const el=document.querySelector(`.msg[data-id="${editTarget.id}"] .mtext`);
-    if(el) el.innerHTML=fmtText(t)+'<span class="medit">(edited)</span>';
-    send({type:'edit',msgId:editTarget.id,newContent:t});
-  }
-  closeModal('editModal'); editTarget=null;
-}
-function delMsg(id) {
-  const i=messages.findIndex(m=>m.id===id); if(i===-1) return;
-  messages.splice(i,1); rebuildMsgs();
-  send({type:'delete',msgId:id});
-}
-
-function scrollBottom() { const c=document.getElementById('msgs'); c.scrollTop=c.scrollHeight; }
-function saveHistory() { try{ localStorage.setItem('dscrd_hist2',JSON.stringify({messages,nextId})); }catch(e){} }
-function loadHistory() {
-  try {
-    const s=localStorage.getItem('dscrd_hist2');
-    if(s){ const d=JSON.parse(s); messages=d.messages||[]; nextId=d.nextId||1; rebuildMsgs(); }
-  } catch(e){}
-}
-
-// ── VOICE ──────────────────────────────────
-function handleVCClick() {
-  if(!connected) { showToast('Connect to a peer first','warn'); return; }
-  isInVC ? leaveVC() : joinVC();
-}
-
-async function joinVC() {
-  if(isInVC) return;
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({audio:true,video:false});
-    localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
-    isInVC=true;
-    document.getElementById('vcPanel').classList.add('on');
-    document.getElementById('vcChi').classList.add('act');
-    document.getElementById('micBtn').style.display='flex';
-    document.getElementById('deafBtn').style.display='flex';
-    updateVCUI(); updateVCMems();
-    showToast('Joined voice channel','ok');
-  } catch(e) { showToast('Mic error: '+e.message,'err'); }
-}
-
-function leaveVC() {
-  if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
-  isInVC=false; isMuted=false; isDeafened=false;
-  document.getElementById('vcPanel').classList.remove('on');
-  document.getElementById('vcChi').classList.remove('act');
-  document.getElementById('micBtn').style.display='none';
-  document.getElementById('deafBtn').style.display='none';
-  document.getElementById('remAudio').srcObject=null;
-  updateVCUI(); updateVCMems();
-}
-
-function toggleMic() {
-  isMuted=!isMuted;
-  if(localStream) localStream.getAudioTracks().forEach(t=>t.enabled=!isMuted);
-  showToast(isMuted?'Muted':'Unmuted',isMuted?'warn':'ok',1500);
-  updateVCUI();
-}
-function toggleDeafen() {
-  isDeafened=!isDeafened;
-  const a=document.getElementById('remAudio'); if(a) a.muted=isDeafened;
-  if(isDeafened) { isMuted=true; if(localStream) localStream.getAudioTracks().forEach(t=>t.enabled=false); }
-  else { isMuted=false; if(localStream) localStream.getAudioTracks().forEach(t=>t.enabled=true); }
-  showToast(isDeafened?'Deafened':'Undeafened',isDeafened?'warn':'ok',1500);
-  updateVCUI();
-}
-
-function updateVCUI() {
-  const els = {
-    micBtn: document.getElementById('micBtn'), deafBtn: document.getElementById('deafBtn'),
-    vcMuteBtn: document.getElementById('vcMuteBtn'), vcDeafBtn: document.getElementById('vcDeafBtn')
-  };
-  if(els.micBtn){ els.micBtn.innerHTML=`<i class="fas fa-${isMuted?'microphone-slash':'microphone'}"></i>`;els.micBtn.style.color=isMuted?'var(--red)':''; }
-  if(els.deafBtn){ els.deafBtn.innerHTML=`<i class="fas fa-${isDeafened?'deaf':'headphones'}"></i>`;els.deafBtn.style.color=isDeafened?'var(--red)':''; }
-  if(els.vcMuteBtn){ els.vcMuteBtn.className='vcbtn'+(isMuted?' muted':'');els.vcMuteBtn.innerHTML=`<i class="fas fa-${isMuted?'microphone-slash':'microphone'}"></i>`; }
-  if(els.vcDeafBtn){ els.vcDeafBtn.className='vcbtn'+(isDeafened?' deaf':'');els.vcDeafBtn.innerHTML=`<i class="fas fa-${isDeafened?'deaf':'headphones'}"></i>`; }
-}
-
-function updateVCMems() {
-  const l=document.getElementById('vcMems'); l.innerHTML='';
-  if(!isInVC) return;
-  const mk=(p,m,d)=>{
-    const div=document.createElement('div'); div.className='vc-mem';
-    const av=document.createElement('div'); av.className='vc-av'; setAvEl(av,p);
-    const nm=document.createElement('span'); nm.textContent=p.username;
-    const ic=document.createElement('div'); ic.className='vc-icons';
-    if(m) ic.innerHTML+='<i class="fas fa-microphone-slash"></i>';
-    if(d) ic.innerHTML+='<i class="fas fa-deaf"></i>';
-    div.appendChild(av);div.appendChild(nm);div.appendChild(ic);return div;
-  };
-  l.appendChild(mk(me,isMuted,isDeafened));
-  if(connected) l.appendChild(mk(remote,false,false));
-}
-
-// ── MISC ───────────────────────────────────
-function openLB(src) { document.getElementById('lbImg').src=src; document.getElementById('lb').classList.add('open'); }
-function dlFile(url,name) { const a=document.createElement('a');a.href=url;a.download=name;a.click(); }
-function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,200)+'px'; }
-function switchCh(name,el) { document.querySelectorAll('.chi').forEach(c=>c.classList.remove('act')); el.classList.add('act'); document.getElementById('chName').textContent=name; document.getElementById('mInput').placeholder='Message #'+name; }
-
-// ── INIT ───────────────────────────────────
-window.onload = () => {
-  loadProfile();
-  initEmoji();
-
-  const inp = document.getElementById('mInput');
-  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendText();}else onTyping(); });
-  inp.addEventListener('input', ()=>autoResize(inp));
-
-  document.getElementById('sendBtn').onclick = sendText;
-  document.getElementById('fInput').onchange = e=>{ if(e.target.files[0]) sendFile(e.target.files[0]); e.target.value=''; };
-  document.getElementById('emojiBtn').onclick = e=>{ e.stopPropagation(); toggleEmoji(e.currentTarget); };
-  document.getElementById('gifBtn').onclick = e=>{ e.stopPropagation(); toggleGif(e.currentTarget); };
-
-  document.addEventListener('click', e=>{
-    if(!e.target.closest('#emojiPicker')&&!e.target.closest('#emojiBtn')) hideEmoji();
-    if(!e.target.closest('#gifPicker')&&!e.target.closest('#gifBtn')) document.getElementById('gifPicker').style.display='none';
-  });
-
-  // Drag & drop files
-  document.querySelector('.chat').addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='copy';});
-  document.querySelector('.chat').addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)sendFile(f);});
-
-  // Paste images
-  document.addEventListener('paste',e=>{ const item=[...e.clipboardData.items].find(i=>i.type.startsWith('image/')); if(item)sendFile(item.getAsFile()); });
-
-  addSys('👋 Welcome to DSCRD! Click the <i class="fas fa-plug"></i> plug icon in the header to connect peer-to-peer — completely serverless.');
-};
-</script>
+        // If we loaded with a ?url= parameter, the Service Worker already handled it
+        // (we shouldn't see this UI unless SW isn't active yet).
+    </script>
 </body>
 </html>
