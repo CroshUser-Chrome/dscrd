@@ -17,25 +17,29 @@
             --toolbar-height: 44px;
             --radius: 8px;
         }
-
+        .light {
+            --bg: #ffffff;
+            --surface: #f0f0f5;
+            --border: #d0d0d5;
+            --text: #1a1a2e;
+            --accent: #1a73e8;
+        }
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui,
-                sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             background: var(--bg);
             color: var(--text);
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            transition: background 0.2s;
         }
-
-        /* Chrome-like toolbar */
+        /* Toolbar */
         .toolbar {
             display: flex;
             align-items: center;
@@ -46,12 +50,6 @@
             gap: 6px;
             flex-shrink: 0;
         }
-
-        .nav-buttons {
-            display: flex;
-            gap: 4px;
-        }
-
         .nav-btn,
         .action-btn {
             width: 28px;
@@ -64,42 +62,36 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.15s;
             font-size: 14px;
+            transition: background 0.15s;
         }
-
         .nav-btn:hover,
         .action-btn:hover {
-            background: #222;
+            background: rgba(128, 128, 128, 0.2);
         }
-
         .nav-btn:disabled {
             opacity: 0.3;
             cursor: default;
         }
-
         .address-bar {
             flex: 1;
             display: flex;
             align-items: center;
-            background: #0d1117;
+            background: var(--bg);
             border: 1px solid var(--border);
             border-radius: 20px;
             height: 32px;
             padding: 0 12px;
             transition: border-color 0.2s;
         }
-
         .address-bar:focus-within {
             border-color: var(--accent);
         }
-
         .address-icon {
-            color: #666;
+            color: #888;
             margin-right: 6px;
             font-size: 12px;
         }
-
         .address-input {
             background: transparent;
             border: none;
@@ -108,7 +100,6 @@
             font-size: 13px;
             width: 100%;
         }
-
         .go-btn {
             background: var(--accent);
             color: #fff;
@@ -121,11 +112,19 @@
             margin-left: 8px;
             height: 28px;
         }
-
         .go-btn:hover {
             filter: brightness(1.1);
         }
-
+        .mode-toggle {
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            cursor: pointer;
+            white-space: nowrap;
+        }
         /* Tab bar */
         .tab-bar {
             display: flex;
@@ -138,7 +137,6 @@
             flex-shrink: 0;
             border-bottom: 1px solid var(--border);
         }
-
         .tab {
             display: flex;
             align-items: center;
@@ -156,26 +154,29 @@
             height: 32px;
             user-select: none;
         }
-
+        .light .tab {
+            background: #e0e0e8;
+            color: #555;
+        }
         .tab.active {
             background: var(--bg);
             color: var(--text);
             border-bottom: 1px solid var(--bg);
             margin-bottom: -1px;
         }
-
         .tab:hover:not(.active) {
             background: #30363d;
         }
-
+        .light .tab:hover:not(.active) {
+            background: #c0c0c8;
+        }
         .tab .tab-title {
             overflow: hidden;
             text-overflow: ellipsis;
             flex: 1;
             margin-right: 6px;
         }
-
-        .tab .close-tab {
+        .close-tab {
             width: 16px;
             height: 16px;
             border-radius: 50%;
@@ -187,11 +188,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            line-height: 1;
             opacity: 0;
             transition: opacity 0.1s;
         }
-
         .tab:hover .close-tab {
             opacity: 1;
         }
@@ -199,7 +198,6 @@
             background: #444;
             color: #fff;
         }
-
         .new-tab-btn {
             background: transparent;
             border: none;
@@ -219,21 +217,34 @@
             color: #fff;
         }
 
-        /* Content area */
+        /* Bookmark bar */
+        .bookmark-bar {
+            display: flex;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 4px 12px;
+            gap: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+            flex-shrink: 0;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .bookmark {
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .bookmark:hover {
+            text-decoration: underline;
+        }
+
+        /* Content */
         .content {
             flex: 1;
             position: relative;
             background: #fff;
         }
-
-        iframe.proxy-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
-
-        /* Status / error overlay inside a tab (if no iframe shown) */
         .status-message {
             display: flex;
             align-items: center;
@@ -253,12 +264,6 @@
             max-width: 420px;
             text-align: center;
         }
-        .error-details code {
-            font-size: 13px;
-            background: #f1f1f1;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
         .retry-btn {
             margin-top: 12px;
             padding: 6px 18px;
@@ -269,31 +274,40 @@
             cursor: pointer;
         }
 
-        /* CORS proxy toggle */
-        .settings-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            color: #8b949e;
-            white-space: nowrap;
-            margin-left: auto;
+        /* Console panel */
+        .console-panel {
+            display: none;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
         }
-        .settings-row input {
-            margin: 0;
+        .console-panel.open {
+            display: block;
         }
-        .settings-row label {
+        .console-entry {
+            margin: 2px 0;
+            word-break: break-all;
+        }
+        .console-entry.error {
+            color: var(--danger);
+        }
+        .console-entry.info {
+            color: var(--accent);
+        }
+        .theme-toggle-btn {
+            margin-left: 4px;
+            font-size: 18px;
             cursor: pointer;
-        }
-
-        @media (max-width: 700px) {
-            .settings-row {
-                display: none;
-            }
         }
     </style>
 </head>
-<body>
+<body class="light">
     <!-- Toolbar -->
     <div class="toolbar">
         <div class="nav-buttons">
@@ -306,27 +320,39 @@
         </div>
         <button class="go-btn" id="goBtn">Go</button>
         <button class="action-btn" id="refreshBtn" title="Refresh">↻</button>
-        <div class="settings-row">
-            <input type="checkbox" id="corsProxyToggle">
-            <label for="corsProxyToggle">Use CORS proxy</label>
-            <span title="When direct fetch fails (CORS blocked), the page will be loaded through a public proxy">ℹ️</span>
-        </div>
+        <button class="mode-toggle" id="modeToggle" title="Toggle between Proxy (fetch+rewrite) and Direct iframe mode">⚡ Proxy</button>
+        <span class="theme-toggle-btn" id="themeToggle">🌙</span>
     </div>
 
     <!-- Tab bar -->
     <div class="tab-bar" id="tabBar"></div>
 
+    <!-- Bookmark bar -->
+    <div class="bookmark-bar" id="bookmarkBar">
+        <span class="bookmark" data-url="https://httpbin.org/html">📄 httpbin (CORS)</span>
+        <span class="bookmark" data-url="https://example.com">🌐 example.com</span>
+        <span class="bookmark" data-url="https://info.cern.ch">🔬 First website</span>
+        <span class="bookmark" data-url="https://www.w3.org">📚 W3C</span>
+    </div>
+
     <!-- Content area -->
     <div class="content" id="contentArea"></div>
 
+    <!-- Console panel -->
+    <div class="console-panel" id="consolePanel"></div>
+
     <script>
         (function() {
-            // ---- Simple tab manager ----
+            // ---------- State ----------
             const state = {
-                tabs: [],              // { id, url, title, history (array of URLs), historyIndex }
+                tabs: [],               // { id, url, title, history[], historyIndex, isLoading, error, htmlContent, mode: 'proxy'|'iframe' }
                 activeTabId: null,
-                corsProxyEnabled: false,
-                corsProxyUrl: 'https://api.allorigins.win/raw?url=', // public proxy
+                proxyMode: true,        // true = fetch+rewrite, false = direct iframe
+                proxyFallbackChain: [
+                    'https://api.allorigins.win/raw?url=',
+                    'https://corsproxy.io/?',
+                    'https://thingproxy.freeboard.io/fetch/',
+                ],
             };
 
             const elements = {
@@ -337,91 +363,80 @@
                 forwardBtn: document.getElementById('forwardBtn'),
                 refreshBtn: document.getElementById('refreshBtn'),
                 goBtn: document.getElementById('goBtn'),
-                corsToggle: document.getElementById('corsProxyToggle'),
+                modeToggle: document.getElementById('modeToggle'),
+                themeToggle: document.getElementById('themeToggle'),
+                consolePanel: document.getElementById('consolePanel'),
+                bookmarkBar: document.getElementById('bookmarkBar'),
             };
 
-            // ---- Utilities ----
+            // ---------- Utilities ----------
+            function log(msg, type = 'info') {
+                const panel = elements.consolePanel;
+                const entry = document.createElement('div');
+                entry.className = `console-entry ${type}`;
+                entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+                panel.appendChild(entry);
+                panel.scrollTop = panel.scrollHeight;
+            }
+
             function makeAbsoluteUrls(html, baseUrl) {
                 const base = new URL(baseUrl);
-                // remove existing <base> tag to avoid double rewriting
                 html = html.replace(/<base[^>]*>/gi, '');
-                // insert our own base just in case
-                // but we'll do manual rewriting instead
                 const urlAttrs = ['src', 'href', 'action', 'srcset', 'data-src', 'poster', 'data-href'];
-
                 function absolutify(raw) {
                     if (!raw || /^(data:|blob:|javascript:|mailto:|tel:|#|\/\/)/i.test(raw)) return raw;
-                    try {
-                        return new URL(raw, base).href;
-                    } catch (e) {
-                        return raw;
-                    }
+                    try { return new URL(raw, base).href; } catch(e) { return raw; }
                 }
-
-                // srcset
-                html = html.replace(/srcset\s*=\s*"([^"]*)"/gi, (match, value) => {
-                    const parts = value.split(',').map(p => {
-                        const trimmed = p.trim();
-                        const lastSpace = trimmed.lastIndexOf(' ');
-                        if (lastSpace > 0) {
-                            return absolutify(trimmed.substring(0, lastSpace)) + trimmed.substring(lastSpace);
-                        }
-                        return absolutify(trimmed);
+                html = html.replace(/srcset\s*=\s*"([^"]*)"/gi, (m, v) => {
+                    const parts = v.split(',').map(p => {
+                        const t = p.trim();
+                        const s = t.lastIndexOf(' ');
+                        return s>0 ? absolutify(t.substring(0,s))+t.substring(s) : absolutify(t);
                     });
-                    return 'srcset="' + parts.join(', ') + '"';
+                    return 'srcset="'+parts.join(', ')+'"';
                 });
-                html = html.replace(/srcset\s*=\s*'([^']*)'/gi, (match, value) => {
-                    const parts = value.split(',').map(p => {
-                        const trimmed = p.trim();
-                        const lastSpace = trimmed.lastIndexOf(' ');
-                        if (lastSpace > 0) {
-                            return absolutify(trimmed.substring(0, lastSpace)) + trimmed.substring(lastSpace);
-                        }
-                        return absolutify(trimmed);
+                html = html.replace(/srcset\s*=\s*'([^']*)'/gi, (m, v) => {
+                    const parts = v.split(',').map(p => {
+                        const t = p.trim();
+                        const s = t.lastIndexOf(' ');
+                        return s>0 ? absolutify(t.substring(0,s))+t.substring(s) : absolutify(t);
                     });
-                    return "srcset='" + parts.join(', ') + "'";
+                    return "srcset='"+parts.join(', ')+"'";
                 });
-
                 urlAttrs.forEach(attr => {
-                    const regexDouble = new RegExp(attr + '\\s*=\\s*"([^"]*)"', 'gi');
-                    html = html.replace(regexDouble, (m, p1) => attr + '="' + absolutify(p1) + '"');
-                    const regexSingle = new RegExp(attr + "\\s*=\\s*'([^']*)'", 'gi');
-                    html = html.replace(regexSingle, (m, p1) => attr + "='" + absolutify(p1) + "'");
+                    html = html.replace(new RegExp(attr+'\\s*=\\s*"([^"]*)"','gi'), (m,p1)=> attr+'="'+absolutify(p1)+'"');
+                    html = html.replace(new RegExp(attr+"\\s*=\\s*'([^']*)'",'gi'), (m,p1)=> attr+"='"+absolutify(p1)+"'");
                 });
                 return html;
             }
 
-            // ---- Tab operations ----
+            // ---------- Tab operations ----------
             function createTab(url = 'about:blank', title = 'New Tab') {
                 const id = Date.now() + Math.random();
                 const tab = {
-                    id,
-                    url,
-                    title,
+                    id, url, title,
                     history: [url],
                     historyIndex: 0,
                     isLoading: false,
                     error: null,
-                    htmlContent: null, // stored HTML for srcdoc
+                    htmlContent: null,
+                    mode: state.proxyMode ? 'proxy' : 'iframe',
                 };
                 state.tabs.push(tab);
                 switchTab(id);
                 renderTabs();
-                if (url && url !== 'about:blank') {
-                    navigateTab(id, url);
-                } else {
-                    updateActiveTabContent();
-                }
+                if (url && url !== 'about:blank') navigateTab(id, url);
+                else updateActiveTabContent();
                 return tab;
             }
 
             function closeTab(id) {
-                if (state.tabs.length <= 1) return; // keep at least one tab
-                const index = state.tabs.findIndex(t => t.id === id);
-                if (index === -1) return;
-                state.tabs.splice(index, 1);
+                if (state.tabs.length <= 1) return;
+                const idx = state.tabs.findIndex(t => t.id === id);
+                if (idx === -1) return;
+                state.tabs.splice(idx, 1);
                 if (state.activeTabId === id) {
-                    const newActive = state.tabs[Math.min(index, state.tabs.length - 1)];
+                    const newActive = state.tabs[Math.min(idx, state.tabs.length - 1)];
                     switchTab(newActive.id);
                 }
                 renderTabs();
@@ -447,21 +462,13 @@
                 state.tabs.forEach(tab => {
                     const el = document.createElement('div');
                     el.className = 'tab' + (tab.id === state.activeTabId ? ' active' : '');
-                    el.innerHTML = `
-                        <span class="tab-title" title="${escapeHtml(tab.title || tab.url)}">${escapeHtml(tab.title || tab.url)}</span>
-                        <button class="close-tab" data-close="${tab.id}">&times;</button>
-                    `;
+                    el.innerHTML = `<span class="tab-title" title="${escapeHtml(tab.title||tab.url)}">${escapeHtml(tab.title||tab.url)}</span><button class="close-tab" data-close="${tab.id}">&times;</button>`;
                     el.addEventListener('click', (e) => {
-                        if (e.target.dataset.close) {
-                            e.stopPropagation();
-                            closeTab(tab.id);
-                        } else {
-                            switchTab(tab.id);
-                        }
+                        if (e.target.dataset.close) { e.stopPropagation(); closeTab(tab.id); }
+                        else switchTab(tab.id);
                     });
                     elements.tabBar.appendChild(el);
                 });
-                // new tab button
                 const newBtn = document.createElement('button');
                 newBtn.className = 'new-tab-btn';
                 newBtn.textContent = '+';
@@ -476,59 +483,48 @@
                 if (!tab) return;
 
                 if (tab.error) {
-                    // show error page
                     const div = document.createElement('div');
                     div.className = 'status-message';
-                    div.innerHTML = `
-                        <div class="error-details">
-                            <h3 style="margin-bottom:8px;">⚠️ Failed to load page</h3>
-                            <p style="color:#333;"><code>${escapeHtml(tab.url)}</code></p>
-                            <p style="margin:12px 0;">${escapeHtml(tab.error)}</p>
-                            <button class="retry-btn" onclick="window._retry()">Retry</button>
-                        </div>
-                    `;
+                    div.innerHTML = `<div class="error-details"><h3>⚠️ Failed to load</h3><p><code>${escapeHtml(tab.url)}</code></p><p>${escapeHtml(tab.error)}</p><button class="retry-btn" onclick="window._retry()">Retry</button></div>`;
                     container.appendChild(div);
-                } else if (tab.htmlContent) {
-                    // create iframe with srcdoc
+                } else if (tab.mode === 'proxy' && tab.htmlContent) {
                     const iframe = document.createElement('iframe');
                     iframe.className = 'proxy-frame';
                     iframe.srcdoc = tab.htmlContent;
                     iframe.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups';
                     container.appendChild(iframe);
-
-                    // Intercept link clicks to keep browsing inside the proxy
+                    // intercept clicks to keep browsing inside the proxy
                     iframe.addEventListener('load', () => {
                         try {
-                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                            if (iframeDoc) {
-                                iframeDoc.addEventListener('click', (e) => {
-                                    const link = e.target.closest('a');
-                                    if (link && link.href && !link.href.startsWith('javascript:')) {
+                            const doc = iframe.contentDocument || iframe.contentWindow.document;
+                            if (doc) {
+                                doc.addEventListener('click', (e) => {
+                                    const a = e.target.closest('a');
+                                    if (a && a.href && !a.href.startsWith('javascript:')) {
                                         e.preventDefault();
-                                        const newUrl = link.href;
-                                        navigateTab(tab.id, newUrl);
+                                        navigateTab(tab.id, a.href);
                                     }
                                 });
-                                // Also catch form submissions (simple post)
-                                iframeDoc.addEventListener('submit', (e) => {
+                                doc.addEventListener('submit', (e) => {
                                     const form = e.target;
                                     if (form.method && form.method.toLowerCase() === 'get') {
                                         e.preventDefault();
                                         const action = form.action || tab.url;
-                                        const formData = new FormData(form);
-                                        const params = new URLSearchParams(formData).toString();
-                                        const newUrl = action + (params ? '?' + params : '');
-                                        navigateTab(tab.id, newUrl);
+                                        const fd = new FormData(form);
+                                        const params = new URLSearchParams(fd).toString();
+                                        navigateTab(tab.id, action + (params?'?'+params:''));
                                     }
-                                    // for POST we can't easily proxy without server, just let it go
                                 });
                             }
-                        } catch (err) {
-                            // if same-origin lost (unlikely), ignore
-                        }
+                        } catch(e) {}
                     });
+                } else if (tab.mode === 'iframe') {
+                    const iframe = document.createElement('iframe');
+                    iframe.className = 'proxy-frame';
+                    iframe.src = tab.url;
+                    iframe.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups allow-presentation';
+                    container.appendChild(iframe);
                 } else {
-                    // blank or loading
                     const div = document.createElement('div');
                     div.className = 'status-message';
                     div.textContent = tab.url === 'about:blank' ? 'New Tab' : 'Loading...';
@@ -537,11 +533,40 @@
             }
 
             function escapeHtml(text) {
-                const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-                return String(text).replace(/[&<>"']/g, m => map[m]);
+                const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'};
+                return String(text).replace(/[&<>"']/g, m=>map[m]);
             }
 
-            // ---- Navigation ----
+            // ---------- Navigation & Proxy chain ----------
+            async function tryFetchWithProxies(url, proxies) {
+                // First try direct fetch (CORS may allow)
+                try {
+                    log(`Direct fetch: ${url}`, 'info');
+                    const resp = await fetch(url, { mode: 'cors' });
+                    if (resp.ok) return resp;
+                    log(`Direct fetch returned ${resp.status}`, 'error');
+                } catch(e) {
+                    log(`Direct fetch failed: ${e.message}`, 'error');
+                }
+
+                // Then try each proxy in chain
+                for (const proxy of proxies) {
+                    const proxyUrl = proxy + encodeURIComponent(url);
+                    log(`Trying proxy: ${proxy}`, 'info');
+                    try {
+                        const resp = await fetch(proxyUrl);
+                        if (resp.ok) {
+                            log(`Proxy success: ${proxyUrl}`, 'info');
+                            return resp;
+                        }
+                        log(`Proxy ${proxy} returned ${resp.status}`, 'error');
+                    } catch(e) {
+                        log(`Proxy ${proxy} failed: ${e.message}`, 'error');
+                    }
+                }
+                throw new Error('All proxies failed. The site likely blocks CORS and public proxies.');
+            }
+
             async function navigateTab(tabId, url, addToHistory = true) {
                 const tab = state.tabs.find(t => t.id === tabId);
                 if (!tab) return;
@@ -549,7 +574,6 @@
                 tab.error = null;
                 tab.url = url;
                 if (addToHistory) {
-                    // trim forward history
                     tab.history = tab.history.slice(0, tab.historyIndex + 1);
                     tab.history.push(url);
                     tab.historyIndex = tab.history.length - 1;
@@ -557,41 +581,32 @@
                 updateNavButtons();
                 elements.addressInput.value = url;
                 renderTabs();
-                updateActiveTabContent(); // show loading
+                updateActiveTabContent();
 
-                try {
-                    let fetchUrl = url;
-                    if (state.corsProxyEnabled && !url.startsWith('about:')) {
-                        fetchUrl = state.corsProxyUrl + encodeURIComponent(url);
+                if (tab.mode === 'proxy') {
+                    try {
+                        const response = await tryFetchWithProxies(url, state.proxyFallbackChain);
+                        const contentType = response.headers.get('Content-Type') || '';
+                        if (!contentType.includes('text/html')) throw new Error('Not an HTML page');
+                        const html = await response.text();
+                        const finalUrl = response.url;
+                        const rewritten = makeAbsoluteUrls(html, finalUrl);
+                        tab.htmlContent = rewritten;
+                        tab.url = finalUrl;
+                        tab.title = finalUrl;
+                        tab.error = null;
+                        elements.addressInput.value = finalUrl;
+                    } catch(err) {
+                        tab.htmlContent = null;
+                        tab.error = err.message;
+                        log(`Navigation error: ${err.message}`, 'error');
                     }
-                    const response = await fetch(fetchUrl, { mode: 'cors' });
-                    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    const contentType = response.headers.get('Content-Type') || '';
-                    if (!contentType.includes('text/html') && !contentType.includes('text/plain'))
-                        throw new Error('Not an HTML page (Content-Type: ' + contentType + ')');
-                    const html = await response.text();
-                    const finalUrl = response.url; // after redirects
-                    const rewritten = makeAbsoluteUrls(html, finalUrl);
-                    tab.htmlContent = rewritten;
-                    tab.url = finalUrl; // update to final URL
-                    tab.title = finalUrl; // could extract <title> later
-                    tab.error = null;
-                    elements.addressInput.value = finalUrl;
-                } catch (err) {
-                    console.error(err);
+                } else {
+                    // Direct iframe mode – just update, error will be handled by iframe itself
                     tab.htmlContent = null;
-                    let msg = err.message;
-                    if (err instanceof TypeError && msg.includes('Failed to fetch')) {
-                        msg = 'Network error or CORS blocked. Try enabling the CORS proxy toggle in the top bar.';
-                    } else if (msg.includes('HTTP 403')) {
-                        msg = 'Access denied (403 Forbidden).';
-                    } else if (msg.includes('HTTP 404')) {
-                        msg = 'Page not found (404).';
-                    }
-                    tab.error = msg;
+                    tab.error = null;
                 }
                 tab.isLoading = false;
-                renderTabs();
                 updateActiveTabContent();
                 updateNavButtons();
             }
@@ -600,16 +615,14 @@
                 const tab = getActiveTab();
                 if (!tab || tab.historyIndex <= 0) return;
                 tab.historyIndex--;
-                const prevUrl = tab.history[tab.historyIndex];
-                navigateTab(tab.id, prevUrl, false);
+                navigateTab(tab.id, tab.history[tab.historyIndex], false);
             }
 
             function goForward() {
                 const tab = getActiveTab();
                 if (!tab || tab.historyIndex >= tab.history.length - 1) return;
                 tab.historyIndex++;
-                const nextUrl = tab.history[tab.historyIndex];
-                navigateTab(tab.id, nextUrl, false);
+                navigateTab(tab.id, tab.history[tab.historyIndex], false);
             }
 
             function updateNavButtons() {
@@ -618,7 +631,7 @@
                 elements.forwardBtn.disabled = !tab || tab.historyIndex >= tab.history.length - 1;
             }
 
-            // ---- Event listeners ----
+            // ---------- UI Events ----------
             elements.goBtn.addEventListener('click', () => {
                 const tab = getActiveTab();
                 if (!tab) return;
@@ -642,19 +655,49 @@
                 if (tab) navigateTab(tab.id, tab.url);
             });
 
-            elements.corsToggle.addEventListener('change', (e) => {
-                state.corsProxyEnabled = e.target.checked;
+            // Toggle proxy / iframe mode for current tab
+            elements.modeToggle.addEventListener('click', () => {
+                const tab = getActiveTab();
+                if (!tab) return;
+                tab.mode = tab.mode === 'proxy' ? 'iframe' : 'proxy';
+                state.proxyMode = tab.mode === 'proxy';
+                elements.modeToggle.textContent = tab.mode === 'proxy' ? '⚡ Proxy' : '🖼️ Iframe';
+                log(`Switched to ${tab.mode} mode`, 'info');
+                navigateTab(tab.id, tab.url, false);
             });
 
-            // expose retry
+            // Dark/light theme
+            elements.themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('light');
+                elements.themeToggle.textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
+            });
+
+            // Bookmark clicks
+            elements.bookmarkBar.addEventListener('click', (e) => {
+                const bookmark = e.target.closest('.bookmark');
+                if (!bookmark) return;
+                const url = bookmark.dataset.url;
+                const tab = getActiveTab();
+                if (tab) navigateTab(tab.id, url);
+            });
+
+            // Console toggle via Ctrl+~
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === '`') {
+                    e.preventDefault();
+                    elements.consolePanel.classList.toggle('open');
+                }
+            });
+
             window._retry = function() {
                 const tab = getActiveTab();
                 if (tab) navigateTab(tab.id, tab.url);
             };
 
-            // ---- Init ----
+            // ---------- Initialize ----------
             createTab('about:blank', 'New Tab');
             renderTabs();
+            log('Serverless proxy ready. Press Ctrl+` to toggle console.', 'info');
         })();
     </script>
 </body>
